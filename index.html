@@ -357,7 +357,6 @@
 
                     const data = await respuesta.json();
                     
-                    // Extraer los registros de forma totalmente flexible
                     const registros = Array.isArray(data) ? data : (data.historial || data.data || data.registros || []);
 
                     const contenedor = document.getElementById('historial-list');
@@ -372,7 +371,6 @@
                         const div = document.createElement('div');
                         div.className = 'historial-item text-light shadow-sm';
 
-                        // Mapeo universal para cualquier nombre que devuelva el servicio RDS en Python
                         const fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
                         const fecha = fechaRaw ? new Date(fechaRaw).toLocaleTimeString() : 'Reciente';
                         
@@ -399,7 +397,6 @@
             initJoysticks();
             initWebSocket();
             cargarHistorial();
-            setInterval(cargarHistorial, 4000);
         });
     </script>
 </body>
