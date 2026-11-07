@@ -208,7 +208,7 @@
 
     <!-- Lógica de Control -->
     <script>
-        const HOST_IP = 'https://ultra-silver-unblessed.ngrok-free.dev';
+        const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
         let sistemaEncendido = false;
         let ws;
 
@@ -255,7 +255,7 @@
         }
 
         function initWebSocket() {
-            ws = new WebSocket(`ws://${HOST_IP}/ws/vehiculos/1`);
+            ws = new WebSocket(`wss://${HOST_IP}/ws/vehiculos/1`);
 
             ws.onopen = () => {
                 badgeWSS.className = "badge bg-success p-2 fs-6 shadow-sm";
@@ -286,7 +286,7 @@
 
         async function enviarComandoREST(idComando) {
             try {
-                await fetch(`http://${HOST_IP}/vehiculos/1/mover`, {
+                await fetch(`https://${HOST_IP}/vehiculos/1/mover`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -302,7 +302,7 @@
 
         async function ejecutarDemo(idDemo) {
             try {
-                await fetch(`http://${HOST_IP}/vehiculos/1/ejecutar-demo`, {
+                await fetch(`https://${HOST_IP}/vehiculos/1/ejecutar-demo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id_demo: parseInt(idDemo) })
@@ -327,7 +327,7 @@
 
         async function cargarHistorial() {
             try {
-                const respuesta = await fetch(`http://${HOST_IP}/vehiculos/1/historial`);
+                const respuesta = await fetch(`https://${HOST_IP}/vehiculos/1/historial`);
 
                 if (respuesta.ok) {
                     badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
@@ -365,7 +365,6 @@
                     });
                 }
             } catch (error) {
-                // Manejo estricto de errores: si falla la API, RDS pasa a "Sin verificar" por seguridad y rigor técnico
                 badgeAPI.className = "badge bg-danger p-2 fs-6 shadow-sm";
                 badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: No disponible`;
                 
