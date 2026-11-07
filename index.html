@@ -267,12 +267,10 @@
                 badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
                 badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
 
-                // Cargar historial al conectar el socket
                 cargarHistorial();
             };
 
             ws.onmessage = (event) => {
-                // Cada vez que el socket reciba una acción, refrescamos el historial automáticamente al instante
                 setTimeout(cargarHistorial, 150);
             };
 
@@ -354,11 +352,13 @@
                     badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
                     badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
 
-                    const data = await respuesta.json();
-                    const registros = data.historial || [];
-
                     badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
                     badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
+
+                    const data = await respuesta.json();
+                    
+                    // Lógica flexible para extraer el array de registros sin importar la clave del JSON
+                    const registros = Array.isArray(data) ? data : (data.historial || data.data || data.registros || []);
 
                     const contenedor = document.getElementById('historial-list');
                     contenedor.innerHTML = '';
@@ -373,20 +373,22 @@
                         div.className = 'historial-item text-light shadow-sm';
 
                         const fecha = mov.fecha_hora ? new Date(mov.fecha_hora).toLocaleTimeString() : 'Reciente';
-                        const nombreCmd = mov.comando || `Comando Desconocido`;
+                        const nombreCmd = mov.comando || mov.nombre || `Comando [${mov.codigo || mov.id_comando}]`;
+                        const codigoCmd = mov.codigo || mov.id_comando || '0';
+                        const origenCmd = mov.origen || 'Sistema IoT';
 
                         div.innerHTML = `
                             <div class="d-flex justify-content-between">
-                                <strong><i class="fas fa-terminal me-1 text-primary"></i> [${mov.codigo}] ${nombreCmd}</strong>
+                                <strong><i class="fas fa-terminal me-1 text-primary"></i> [${codigoCmd}] ${nombreCmd}</strong>
                                 <span class="badge bg-secondary">${fecha}</span>
                             </div>
-                            <div class="mt-1 small text-info"><i class="fas fa-wifi me-1"></i> Origen: ${mov.origen}</div>
+                            <div class="mt-1 small text-info"><i class="fas fa-wifi me-1"></i> Origen: ${origenCmd}</div>
                         `;
                         contenedor.appendChild(div);
                     });
                 }
             } catch (error) {
-                console.error("No se pudo actualizar el historial en tiempo real:", error);
+                console.error("Error al cargar historial:", error);
             }
         }
 
