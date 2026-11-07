@@ -271,7 +271,7 @@
             };
 
             ws.onmessage = (event) => {
-                setTimeout(cargarHistorial, 150);
+                setTimeout(cargarHistorial, 400);
             };
 
             ws.onclose = () => {
@@ -306,7 +306,7 @@
                         origen: "Control Web REST"
                     })
                 });
-                setTimeout(cargarHistorial, 300);
+                setTimeout(cargarHistorial, 400);
             } catch (error) {
                 console.error("Error REST:", error);
             }
@@ -319,7 +319,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id_demo: parseInt(idDemo) })
                 });
-                setTimeout(cargarHistorial, 500);
+                setTimeout(cargarHistorial, 600);
             } catch (error) {
                 console.error("Error al iniciar demo", error);
             }
@@ -357,7 +357,7 @@
 
                     const data = await respuesta.json();
                     
-                    // Lógica flexible para extraer el array de registros sin importar la clave del JSON
+                    // Extraer los registros de forma totalmente flexible
                     const registros = Array.isArray(data) ? data : (data.historial || data.data || data.registros || []);
 
                     const contenedor = document.getElementById('historial-list');
@@ -372,10 +372,13 @@
                         const div = document.createElement('div');
                         div.className = 'historial-item text-light shadow-sm';
 
-                        const fecha = mov.fecha_hora ? new Date(mov.fecha_hora).toLocaleTimeString() : 'Reciente';
-                        const nombreCmd = mov.comando || mov.nombre || `Comando [${mov.codigo || mov.id_comando}]`;
-                        const codigoCmd = mov.codigo || mov.id_comando || '0';
-                        const origenCmd = mov.origen || 'Sistema IoT';
+                        // Mapeo universal para cualquier nombre que devuelva el servicio RDS en Python
+                        const fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
+                        const fecha = fechaRaw ? new Date(fechaRaw).toLocaleTimeString() : 'Reciente';
+                        
+                        const nombreCmd = mov.comando || mov.nombre_comando || mov.nombre || `Comando ID: ${mov.id_comando || mov.codigo || 'N/D'}`;
+                        const codigoCmd = mov.codigo || mov.id_comando || mov.codigo_comando || '0';
+                        const origenCmd = mov.origen || mov.source || 'Sistema IoT';
 
                         div.innerHTML = `
                             <div class="d-flex justify-content-between">
