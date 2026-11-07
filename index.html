@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel IoT | Excavadora</title>
+
+    <!-- Favicon personalizado -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    
+    <!-- Bootstrap CSS y FontAwesome -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Librería NippleJS para Joysticks -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+
+    <style>
+        body {
+            /* Fondo con ruta compatible para servidor local y GitHub Pages */
+            background: linear-gradient(rgba(11, 14, 20, 0.65), rgba(11, 14, 20, 0.65)), url('img/fondo.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            background-color: #0b0e14;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .gamepad-container {
+            background: linear-gradient(135deg, rgba(20, 24, 33, 0.95), rgba(10, 12, 16, 0.95));
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 35px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7), inset 0 2px 5px rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .joystick-panel {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .joystick-zone {
+            height: 220px;
+            position: relative;
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.6) 0%, rgba(20, 25, 35, 0.4) 100%);
+            border-radius: 50%;
+            width: 220px;
+            margin: 0 auto;
+            border: 3px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .btn-gamepad {
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-gamepad:active {
+            transform: scale(0.95);
+        }
+
+        .glass-panel-side {
+            background: rgba(20, 24, 33, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        #historial-list {
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        #historial-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #historial-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .historial-item {
+            font-size: 0.85em;
+            border-left: 4px solid #0d6efd;
+            background: rgba(0, 0, 0, 0.4);
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 0 10px 10px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        footer {
+            margin-top: auto;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="p-0">
+
+    <!-- Navbar / Indicadores de Estado -->
+    <nav class="navbar navbar-dark bg-dark px-4 shadow-lg mb-3 border-bottom border-secondary"
+        style="background: rgba(10,12,16,0.95) !important;">
+        <span class="navbar-brand mb-0 h1 fw-bold"><i class="fas fa-gamepad text-warning me-2"></i>Panel de Control | Excavadora IoT</span>
+        <div class="d-flex gap-3">
+            <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS: Desconectado</span>
+            <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API: ...</span>
+            <span id="badge-rds" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS: ...</span>
+        </div>
+    </nav>
+
+    <!-- Contenedor Principal Centrado -->
+    <div class="container-fluid max-w-1200 px-4 flex-grow-1 d-flex flex-column justify-content-center my-3">
+        <div class="row g-4 align-items-center justify-content-center">
+
+            <!-- Mando Estilo Gamepad -->
+            <div class="col-lg-8">
+                <div class="gamepad-container p-4">
+
+                    <div class="row align-items-center">
+                        <!-- Joystick Izquierdo (Tracción Orugas) -->
+                        <div class="col-md-5 text-center joystick-panel">
+                            <h5 class="text-info mb-3 fw-bold"><i class="fas fa-truck me-2"></i>TRACCIÓN</h5>
+                            <div id="joystick-izq" class="joystick-zone"></div>
+                            <div id="lbl-izq" class="mt-3 badge bg-secondary px-4 py-2 fs-6 shadow-sm rounded-pill">DETENIDO</div>
+                        </div>
+
+                        <!-- Botones Centrales del Mando -->
+                        <div class="col-md-2 px-2 d-flex flex-column justify-content-center align-items-center my-3 my-md-0">
+                            <button id="btn-encendido" class="btn btn-danger btn-lg btn-gamepad w-100 mb-2 py-3 shadow"
+                                onclick="toggleEncendido()" title="Sistema On/Off">
+                                <i class="fas fa-power-off fa-lg"></i>
+                            </button>
+                            <button class="btn btn-outline-warning btn-gamepad w-100 mb-2 py-2"
+                                onclick="enviarComandoREST(7)" title="Luces">
+                                <i class="fas fa-lightbulb"></i>
+                            </button>
+                            <button class="btn btn-outline-info btn-gamepad w-100 mb-2 py-2"
+                                onclick="enviarComandoREST(8)" title="Claxon">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-gamepad w-100 py-2 text-light"
+                                onclick="ejecutarDemo(1)" title="Secuencia Demo">
+                                <i class="fas fa-play me-1"></i>Demo
+                            </button>
+                        </div>
+
+                        <!-- Joystick Derecho (Brazo y Cucharón) -->
+                        <div class="col-md-5 text-center joystick-panel">
+                            <h5 class="text-warning mb-3 fw-bold"><i class="fas fa-cogs me-2"></i>BRAZO & ROT</h5>
+                            <div id="joystick-der" class="joystick-zone"></div>
+                            <div id="lbl-der" class="mt-3 badge bg-secondary px-4 py-2 fs-6 shadow-sm rounded-pill">DETENIDO</div>
+                        </div>
+                    </div>
+
+                    <!-- Paro de Emergencia -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <button class="btn btn-danger btn-lg w-75 py-3 fw-bold text-uppercase shadow-lg rounded-pill"
+                                style="border: 2px solid rgba(255,255,255,0.2); background: linear-gradient(135deg, #dc3545, #a71d2a);"
+                                onclick="forzarParo()">
+                                <i class="fas fa-hand-paper me-2"></i>DETENER TODO (PARO DE EMERGENCIA)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Registro en Vivo / Historial -->
+            <div class="col-lg-4">
+                <div class="glass-panel-side p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
+                        <h5 class="text-light m-0"><i class="fas fa-history me-2 text-primary"></i>Registro en Vivo</h5>
+                        <button class="btn btn-sm btn-outline-success rounded-circle p-2" onclick="cargarHistorial()" title="Sincronizar">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div id="historial-list" class="d-flex flex-column">
+                        <div class="text-muted text-center mt-5">Cargando registros de AWS RDS...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pie de Página (Créditos Académicos) -->
+    <footer class="text-center p-3 text-secondary">
+        <small>
+            <strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong><br>
+            Desarrollado por Damaris Domínguez Zapata · 2026
+        </small>
+    </footer>
+
+    <!-- Lógica de Control -->
+    <script>
+        const HOST_IP = '100.60.28.1:8000';
+        let sistemaEncendido = false;
+        let ws;
+
+        const badgeWSS = document.getElementById('badge-wss');
+        const badgeAPI = document.getElementById('badge-api');
+        const badgeRDS = document.getElementById('badge-rds');
+
+        function actualizarEtiqueta(elemento, texto, claseColor) {
+            elemento.textContent = texto;
+            elemento.className = `mt-3 badge ${claseColor} px-4 py-2 fs-6 shadow-sm rounded-pill`;
+        }
+
+        function initJoysticks() {
+            const lblIzq = document.getElementById('lbl-izq');
+            const lblDer = document.getElementById('lbl-der');
+
+            const joyIzq = nipplejs.create({
+                zone: document.getElementById('joystick-izq'),
+                mode: 'static',
+                position: { left: '50%', top: '50%' },
+                color: '#0dcaf0',
+                size: 130
+            });
+
+            joyIzq.on('dir:up', () => { enviarComandoWS(2); actualizarEtiqueta(lblIzq, '↑ ADELANTE', 'bg-info text-dark'); });
+            joyIzq.on('dir:down', () => { enviarComandoWS(1); actualizarEtiqueta(lblIzq, '↓ ATRÁS', 'bg-info text-dark'); });
+            joyIzq.on('dir:left', () => { enviarComandoWS(3); actualizarEtiqueta(lblIzq, '← GIRO IZQ', 'bg-info text-dark'); });
+            joyIzq.on('dir:right', () => { enviarComandoWS(4); actualizarEtiqueta(lblIzq, '→ GIRO DER', 'bg-info text-dark'); });
+            joyIzq.on('end', () => { enviarComandoWS(13); actualizarEtiqueta(lblIzq, 'DETENIDO', 'bg-secondary'); });
+
+            const joyDer = nipplejs.create({
+                zone: document.getElementById('joystick-der'),
+                mode: 'static',
+                position: { left: '50%', top: '50%' },
+                color: '#ffc107',
+                size: 130
+            });
+
+            joyDer.on('dir:up', () => { enviarComandoWS(9); actualizarEtiqueta(lblDer, '↑ SUBIR BRAZO', 'bg-warning text-dark'); });
+            joyDer.on('dir:down', () => { enviarComandoWS(10); actualizarEtiqueta(lblDer, '↓ BAJAR BRAZO', 'bg-warning text-dark'); });
+            joyDer.on('dir:left', () => { enviarComandoWS(12); actualizarEtiqueta(lblDer, '← ROTAR IZQ', 'bg-warning text-dark'); });
+            joyDer.on('dir:right', () => { enviarComandoWS(11); actualizarEtiqueta(lblDer, '→ ROTAR DER', 'bg-warning text-dark'); });
+            joyDer.on('end', () => { enviarComandoWS(13); actualizarEtiqueta(lblDer, 'DETENIDO', 'bg-secondary'); });
+        }
+
+        function initWebSocket() {
+            ws = new WebSocket(`ws://${HOST_IP}/ws/vehiculos/1`);
+
+            ws.onopen = () => {
+                badgeWSS.className = "badge bg-success p-2 fs-6 shadow-sm";
+                badgeWSS.innerHTML = `<i class="fas fa-plug me-1"></i>WSS: Conectado`;
+            };
+
+            ws.onclose = () => {
+                badgeWSS.className = "badge bg-danger p-2 fs-6 shadow-sm";
+                badgeWSS.innerHTML = `<i class="fas fa-plug me-1"></i>WSS: Error`;
+                setTimeout(initWebSocket, 3000);
+            };
+        }
+
+        function enviarComandoWS(idComando) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    id_comando: parseInt(idComando),
+                    origen: "Joystick WSS"
+                }));
+            }
+        }
+
+        function forzarParo() {
+            enviarComandoWS(13);
+            actualizarEtiqueta(document.getElementById('lbl-izq'), 'DETENIDO', 'bg-secondary');
+            actualizarEtiqueta(document.getElementById('lbl-der'), 'DETENIDO', 'bg-secondary');
+        }
+
+        async function enviarComandoREST(idComando) {
+            try {
+                await fetch(`http://${HOST_IP}/vehiculos/1/mover`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_comando: parseInt(idComando),
+                        origen: "Control Web REST"
+                    })
+                });
+                setTimeout(cargarHistorial, 300);
+            } catch (error) {
+                console.error("Error REST:", error);
+            }
+        }
+
+        async function ejecutarDemo(idDemo) {
+            try {
+                await fetch(`http://${HOST_IP}/vehiculos/1/ejecutar-demo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_demo: parseInt(idDemo) })
+                });
+            } catch (error) {
+                console.error("Error al iniciar demo", error);
+            }
+        }
+
+        function toggleEncendido() {
+            sistemaEncendido = !sistemaEncendido;
+            const btn = document.getElementById('btn-encendido');
+            if (sistemaEncendido) {
+                btn.classList.replace('btn-danger', 'btn-success');
+                btn.style.background = "linear-gradient(135deg, #198754, #146c43)";
+            } else {
+                btn.classList.replace('btn-success', 'btn-danger');
+                btn.style.background = "linear-gradient(135deg, #dc3545, #a71d2a)";
+            }
+            enviarComandoREST(5);
+        }
+
+        async function cargarHistorial() {
+            try {
+                const respuesta = await fetch(`http://${HOST_IP}/vehiculos/1/historial`);
+
+                if (respuesta.ok) {
+                    badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
+                    badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
+
+                    const data = await respuesta.json();
+                    const registros = data.historial || [];
+
+                    badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
+                    badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
+
+                    const contenedor = document.getElementById('historial-list');
+                    contenedor.innerHTML = '';
+
+                    if (registros.length === 0) {
+                        contenedor.innerHTML = '<div class="text-muted text-center mt-3">Sin movimientos registrados</div>';
+                        return;
+                    }
+
+                    registros.slice(0, 50).forEach(mov => {
+                        const div = document.createElement('div');
+                        div.className = 'historial-item text-light shadow-sm';
+
+                        const fecha = mov.fecha_hora ? new Date(mov.fecha_hora).toLocaleTimeString() : 'Reciente';
+                        const nombreCmd = mov.comando || `Comando Desconocido`;
+
+                        div.innerHTML = `
+                            <div class="d-flex justify-content-between">
+                                <strong><i class="fas fa-terminal me-1 text-primary"></i> [${mov.codigo}] ${nombreCmd}</strong>
+                                <span class="badge bg-secondary">${fecha}</span>
+                            </div>
+                            <div class="mt-1 small text-info"><i class="fas fa-wifi me-1"></i> Origen: ${mov.origen}</div>
+                        `;
+                        contenedor.appendChild(div);
+                    });
+                }
+            } catch (error) {
+                // Manejo estricto de errores: si falla la API, RDS pasa a "Sin verificar" por seguridad y rigor técnico
+                badgeAPI.className = "badge bg-danger p-2 fs-6 shadow-sm";
+                badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: No disponible`;
+                
+                badgeRDS.className = "badge bg-warning text-dark p-2 fs-6 shadow-sm";
+                badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Sin verificar`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initJoysticks();
+            initWebSocket();
+            cargarHistorial();
+            setInterval(cargarHistorial, 5000);
+        });
+    </script>
+</body>
+
+</html>
