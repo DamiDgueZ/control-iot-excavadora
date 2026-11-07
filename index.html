@@ -261,12 +261,19 @@
                 badgeWSS.className = "badge bg-success p-2 fs-6 shadow-sm";
                 badgeWSS.innerHTML = `<i class="fas fa-plug me-1"></i>WSS: Conectado`;
 
-                // Sincronización automática a verde al confirmar conexión en tiempo real con el backend
                 badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
                 badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
 
                 badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
                 badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
+
+                // Cargar historial al conectar el socket
+                cargarHistorial();
+            };
+
+            ws.onmessage = (event) => {
+                // Cada vez que el socket reciba una acción, refrescamos el historial automáticamente al instante
+                setTimeout(cargarHistorial, 150);
             };
 
             ws.onclose = () => {
@@ -314,6 +321,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id_demo: parseInt(idDemo) })
                 });
+                setTimeout(cargarHistorial, 500);
             } catch (error) {
                 console.error("Error al iniciar demo", error);
             }
@@ -334,7 +342,13 @@
 
         async function cargarHistorial() {
             try {
-                const respuesta = await fetch(`https://${HOST_IP}/vehiculos/1/historial`);
+                const respuesta = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
 
                 if (respuesta.ok) {
                     badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
@@ -372,8 +386,7 @@
                     });
                 }
             } catch (error) {
-                // Si el fetch por CORS o política de ngrok se pone estricto, 
-                // mantenemos la API operativa visualmente si el WebSocket ya confirmó enlace.
+                console.error("No se pudo actualizar el historial en tiempo real:", error);
             }
         }
 
@@ -381,7 +394,7 @@
             initJoysticks();
             initWebSocket();
             cargarHistorial();
-            setInterval(cargarHistorial, 5000);
+            setInterval(cargarHistorial, 4000);
         });
     </script>
 </body>
