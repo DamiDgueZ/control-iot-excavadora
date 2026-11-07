@@ -18,8 +18,8 @@
 
     <style>
         body {
-            /* Fondo con ruta compatible para servidor local y GitHub Pages */
-            background: linear-gradient(rgba(11, 14, 20, 0.65), rgba(11, 14, 20, 0.65)), url('img/fondo.jpeg') no-repeat center center fixed;
+            /* RUTA DEL FONDO CORREGIDA (apuntando a assets/img) */
+            background: linear-gradient(rgba(11, 14, 20, 0.65), rgba(11, 14, 20, 0.65)), url('assets/img/fondo.jpeg') no-repeat center center fixed;
             background-size: cover;
             background-color: #0b0e14;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -260,13 +260,6 @@
             ws.onopen = () => {
                 badgeWSS.className = "badge bg-success p-2 fs-6 shadow-sm";
                 badgeWSS.innerHTML = `<i class="fas fa-plug me-1"></i>WSS: Conectado`;
-
-                badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
-                badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
-
-                badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
-                badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
-
                 cargarHistorial();
             };
 
@@ -300,7 +293,10 @@
             try {
                 await fetch(`https://${HOST_IP}/vehiculos/1/mover`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true' /* Bypassea la advertencia de ngrok */
+                    },
                     body: JSON.stringify({
                         id_comando: parseInt(idComando),
                         origen: "Control Web REST"
@@ -316,7 +312,10 @@
             try {
                 await fetch(`https://${HOST_IP}/vehiculos/1/ejecutar-demo`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
                     body: JSON.stringify({ id_demo: parseInt(idDemo) })
                 });
                 setTimeout(cargarHistorial, 600);
@@ -339,12 +338,14 @@
         }
 
         async function cargarHistorial() {
+            const contenedor = document.getElementById('historial-list');
             try {
                 const respuesta = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true' /* ¡ESTO EVITA QUE NGROK ROMPA LA LECTURA JSON! */
                     }
                 });
 
@@ -359,7 +360,6 @@
                     
                     const registros = Array.isArray(data) ? data : (data.historial || data.data || data.registros || []);
 
-                    const contenedor = document.getElementById('historial-list');
                     contenedor.innerHTML = '';
 
                     if (registros.length === 0) {
@@ -387,16 +387,19 @@
                         `;
                         contenedor.appendChild(div);
                     });
+                } else {
+                    contenedor.innerHTML = `<div class="text-danger text-center mt-3 small"><i class="fas fa-exclamation-triangle"></i> Error en la petición HTTP: ${respuesta.status}</div>`;
                 }
             } catch (error) {
                 console.error("Error al cargar historial:", error);
+                contenedor.innerHTML = `<div class="text-danger text-center mt-3 small"><i class="fas fa-exclamation-triangle"></i> Error de conexión/lectura. ¿Ngrok bloqueó el acceso JSON? Abre F12 para ver detalles.</div>`;
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             initJoysticks();
             initWebSocket();
-            cargarHistorial();
+            // cargarHistorial() ya se manda a llamar cuando el WebSocket se conecta
         });
     </script>
 </body>
