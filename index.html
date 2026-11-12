@@ -4,29 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel IoT | Excavadora</title>
-
-    <!-- Favicon personalizado -->
+    <title>Control IoT | Excavadora</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-    
-    <!-- Bootstrap CSS y FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Librería NippleJS para Joysticks -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
-
-    <!-- AQUÍ LLAMAMOS A TU ARCHIVO CSS SEPARADO -->
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 
 <body class="p-0">
+    <!-- Navbar / Navegación y Estado -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg mb-3 border-bottom border-secondary" style="background: rgba(10,12,16,0.95) !important;">
+        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma IoT</span>
+        
+        <!-- Navegación entre Control y Monitoreo -->
+        <ul class="navbar-nav me-auto flex-row gap-3">
+            <li class="nav-item">
+                <a class="nav-link active fw-bold text-light" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i> Monitoreo</a>
+            </li>
+        </ul>
 
-    <!-- Navbar / Indicadores de Estado -->
-    <nav class="navbar navbar-dark bg-dark px-4 shadow-lg mb-3 border-bottom border-secondary"
-        style="background: rgba(10,12,16,0.95) !important;">
-        <span class="navbar-brand mb-0 h1 fw-bold"><i class="fas fa-gamepad text-warning me-2"></i>Panel de Control | Excavadora IoT</span>
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-3 mt-2 mt-lg-0">
             <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS: Desconectado</span>
             <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API: ...</span>
             <span id="badge-rds" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS: ...</span>
@@ -36,88 +37,67 @@
     <!-- Contenedor Principal Centrado -->
     <div class="container-fluid max-w-1200 px-4 flex-grow-1 d-flex flex-column justify-content-center my-3">
         <div class="row g-4 align-items-center justify-content-center">
-
             <!-- Mando Estilo Gamepad -->
             <div class="col-lg-8">
                 <div class="gamepad-container p-4">
-
                     <div class="row align-items-center">
-                        <!-- Joystick Izquierdo (Tracción Orugas) -->
                         <div class="col-md-5 text-center joystick-panel">
                             <h5 class="text-info mb-3 fw-bold"><i class="fas fa-truck me-2"></i>TRACCIÓN</h5>
                             <div id="joystick-izq" class="joystick-zone"></div>
                             <div id="lbl-izq" class="mt-3 badge bg-secondary px-4 py-2 fs-6 shadow-sm rounded-pill">DETENIDO</div>
                         </div>
 
-                        <!-- Botones Centrales del Mando -->
                         <div class="col-md-2 px-2 d-flex flex-column justify-content-center align-items-center my-3 my-md-0">
-                            <button id="btn-encendido" class="btn btn-danger btn-lg btn-gamepad w-100 mb-2 py-3 shadow"
-                                onclick="toggleEncendido()" title="Sistema On/Off">
+                            <button id="btn-encendido" class="btn btn-danger btn-lg btn-gamepad w-100 mb-2 py-3 shadow" onclick="toggleEncendido()" title="Sistema On/Off">
                                 <i class="fas fa-power-off fa-lg"></i>
                             </button>
-                            <button class="btn btn-outline-warning btn-gamepad w-100 mb-2 py-2"
-                                onclick="enviarComandoREST(7)" title="Luces">
+                            <button class="btn btn-outline-warning btn-gamepad w-100 mb-2 py-2" onclick="enviarComandoREST(7)" title="Luces">
                                 <i class="fas fa-lightbulb"></i>
                             </button>
-                            <button class="btn btn-outline-info btn-gamepad w-100 mb-2 py-2"
-                                onclick="enviarComandoREST(8)" title="Claxon">
+                            <button class="btn btn-outline-info btn-gamepad w-100 mb-2 py-2" onclick="enviarComandoREST(8)" title="Claxon">
                                 <i class="fas fa-volume-up"></i>
                             </button>
-                            <button class="btn btn-outline-secondary btn-gamepad w-100 py-2 text-light"
-                                onclick="ejecutarDemo(1)" title="Secuencia Demo">
+                            <button class="btn btn-outline-secondary btn-gamepad w-100 py-2 text-light" onclick="ejecutarDemo(1)" title="Secuencia Demo">
                                 <i class="fas fa-play me-1"></i>Demo
                             </button>
                         </div>
 
-                        <!-- Joystick Derecho (Brazo y Cucharón) -->
                         <div class="col-md-5 text-center joystick-panel">
                             <h5 class="text-warning mb-3 fw-bold"><i class="fas fa-cogs me-2"></i>BRAZO & ROT</h5>
                             <div id="joystick-der" class="joystick-zone"></div>
                             <div id="lbl-der" class="mt-3 badge bg-secondary px-4 py-2 fs-6 shadow-sm rounded-pill">DETENIDO</div>
                         </div>
                     </div>
-
-                    <!-- Paro de Emergencia -->
                     <div class="row mt-4">
                         <div class="col-12 text-center">
-                            <button class="btn btn-danger btn-lg w-75 py-3 fw-bold text-uppercase shadow-lg rounded-pill"
-                                style="border: 2px solid rgba(255,255,255,0.2); background: linear-gradient(135deg, #dc3545, #a71d2a);"
-                                onclick="forzarParo()">
+                            <button class="btn btn-danger btn-lg w-75 py-3 fw-bold text-uppercase shadow-lg rounded-pill" style="border: 2px solid rgba(255,255,255,0.2); background: linear-gradient(135deg, #dc3545, #a71d2a);" onclick="forzarParo()">
                                 <i class="fas fa-hand-paper me-2"></i>DETENER TODO (PARO DE EMERGENCIA)
                             </button>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- Registro en Vivo / Historial -->
+            <!-- Mini historial lateral (Opcional, se mantiene por funcionalidad previa) -->
             <div class="col-lg-4">
                 <div class="glass-panel-side p-4 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary pb-2">
-                        <h5 class="text-light m-0"><i class="fas fa-history me-2 text-primary"></i>Registro en Vivo</h5>
-                        <button class="btn btn-sm btn-outline-success rounded-circle p-2" onclick="cargarHistorial()" title="Sincronizar">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
+                        <h5 class="text-light m-0"><i class="fas fa-history me-2 text-primary"></i>Registro Rápido</h5>
                     </div>
                     <div id="historial-list" class="d-flex flex-column">
-                        <div class="text-muted text-center mt-5">Cargando registros de AWS RDS...</div>
+                        <div class="text-muted text-center mt-5">Cargando registros...</div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- Pie de Página (Créditos Académicos) -->
-    <footer class="text-center p-3 text-secondary">
-        <small>
-            <strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong><br>
-            Desarrollado por Damaris Domínguez Zapata · 2026
-        </small>
+    <!-- Pie de Página -->
+    <footer class="text-center p-3 text-secondary mt-auto" style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong><br>Desarrollado por Damaris Domínguez Zapata · 2026</small>
     </footer>
 
-    <!-- AQUÍ LLAMAMOS A TU ARCHIVO JS SEPARADO -->
+    <!-- LÓGICA LOCAL DE CONTROL -->
     <script src="assets/js/app.js"></script>
 </body>
 
