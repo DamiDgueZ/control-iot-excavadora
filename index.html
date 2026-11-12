@@ -34,6 +34,8 @@
             </span>
             <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS: Desconectado</span>
             <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API: ...</span>
+            <!-- RDS devuelto a la vida -->
+            <span id="badge-rds" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS: ...</span>
         </div>
     </nav>
 
@@ -64,13 +66,10 @@
                                 <i class="fas fa-volume-up"></i>
                             </button>
                             
-                            <!-- Selector y botón de Demo -->
+                            <!-- NUEVO: Selector numérico de Demo -->
                             <div class="input-group mb-2 w-100 shadow-sm">
-                                <select class="form-select bg-dark text-light border-secondary text-center" id="select-demo" style="font-size: 0.85rem;">
-                                    <option value="1">Demo 1</option>
-                                    <option value="2">Demo 2</option>
-                                    <option value="3">Demo 3</option>
-                                </select>
+                                <input type="number" class="form-control bg-dark text-light border-secondary text-center fw-bold" 
+                                       id="input-demo" min="1" value="1" placeholder="N°" style="font-size: 1rem; width: 40px; padding: 5px;">
                                 <button class="btn btn-outline-secondary btn-gamepad text-light px-3" onclick="ejecutarDemoSeleccionada()" title="Iniciar Demo">
                                     <i class="fas fa-play"></i>
                                 </button>

@@ -4,6 +4,7 @@ let ws;
 
 const badgeWSS = document.getElementById('badge-wss');
 const badgeAPI = document.getElementById('badge-api');
+const badgeRDS = document.getElementById('badge-rds');
 
 function actualizarEtiqueta(elemento, texto, claseColor) {
     elemento.textContent = texto;
@@ -56,13 +57,22 @@ function initWebSocket() {
             const data = JSON.parse(event.data);
             const eventoStr = (data.evento || "").toLowerCase();
             const origenStr = data.origen || "";
+            const idCmd = parseInt(data.id_comando);
+            const comandoStr = (data.comando || "").toUpperCase();
 
-            // Enciende indicador si llega evento de demo
+            // 1. Detectar inicio de Demo Automática
             if (eventoStr.includes("inicio_demo") || origenStr === "Demo Automática") {
                 mostrarIndicadorDemo(true);
+                
+                // 2. Apagar la alerta si la Demo lanza el comando "APAGAR_TODO" (ID 13) al terminar
+                if (idCmd === 13 || comandoStr === "APAGAR_TODO") {
+                    setTimeout(() => {
+                        mostrarIndicadorDemo(false);
+                    }, 1000);
+                }
             }
             
-            // Apaga indicador si llega evento de fin o cancelación de demo
+            // 3. Apagado genérico si detectamos palabras clave de fin en el evento
             if (eventoStr.includes("fin") || eventoStr.includes("cancel") || eventoStr.includes("completada")) {
                 mostrarIndicadorDemo(false);
             }
@@ -127,8 +137,14 @@ async function enviarComandoREST(idComando) {
 }
 
 function ejecutarDemoSeleccionada() {
-    const idDemo = document.getElementById('select-demo').value;
-    ejecutarDemo(idDemo);
+    const input = document.getElementById('input-demo');
+    const idDemo = parseInt(input.value);
+    
+    if (idDemo && idDemo > 0) {
+        ejecutarDemo(idDemo);
+    } else {
+        alert("Por favor, ingresa un número de Demo válido (ej. 1)");
+    }
 }
 
 async function ejecutarDemo(idDemo) {
@@ -165,7 +181,27 @@ function toggleEncendido() {
     enviarComandoREST(5);
 }
 
+// NUEVO: Verifica que el backend esté arriba para encender los badges en verde al cargar la página
+async function verificarSaludAPI() {
+    try {
+        const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' }
+        });
+        if(res.ok) {
+            badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
+            badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
+            
+            badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
+            badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
+        }
+    } catch (error) {
+        console.error("No se pudo conectar a la API al inicio:", error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initJoysticks();
     initWebSocket();
+    verificarSaludAPI(); // Llama a los indicadores al abrir
 });
