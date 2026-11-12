@@ -4,7 +4,6 @@ let ws;
 
 const badgeWSS = document.getElementById('badge-wss');
 const badgeAPI = document.getElementById('badge-api');
-const badgeRDS = document.getElementById('badge-rds');
 
 function actualizarEtiqueta(elemento, texto, claseColor) {
     elemento.textContent = texto;
@@ -50,11 +49,6 @@ function initWebSocket() {
     ws.onopen = () => {
         badgeWSS.className = "badge bg-success p-2 fs-6 shadow-sm";
         badgeWSS.innerHTML = `<i class="fas fa-plug me-1"></i>WSS: Conectado`;
-        cargarHistorial();
-    };
-
-    ws.onmessage = (event) => {
-        setTimeout(cargarHistorial, 400);
     };
 
     ws.onclose = () => {
@@ -81,18 +75,21 @@ function forzarParo() {
 
 async function enviarComandoREST(idComando) {
     try {
-        await fetch(`https://${HOST_IP}/vehiculos/1/mover`, {
+        const res = await fetch(`https://${HOST_IP}/vehiculos/1/mover`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true' /* Bypassea la advertencia de ngrok */
+                'ngrok-skip-browser-warning': 'true'
             },
             body: JSON.stringify({
                 id_comando: parseInt(idComando),
                 origen: "Control Web REST"
             })
         });
-        setTimeout(cargarHistorial, 400);
+        if(res.ok) {
+            badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
+            badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
+        }
     } catch (error) {
         console.error("Error REST:", error);
     }
@@ -108,7 +105,6 @@ async function ejecutarDemo(idDemo) {
             },
             body: JSON.stringify({ id_demo: parseInt(idDemo) })
         });
-        setTimeout(cargarHistorial, 600);
     } catch (error) {
         console.error("Error al iniciar demo", error);
     }
@@ -127,67 +123,7 @@ function toggleEncendido() {
     enviarComandoREST(5);
 }
 
-async function cargarHistorial() {
-    const contenedor = document.getElementById('historial-list');
-    try {
-        const respuesta = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true' /* ¡ESTO EVITA QUE NGROK ROMPA LA LECTURA JSON! */
-            }
-        });
-
-        if (respuesta.ok) {
-            badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
-            badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
-
-            badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
-            badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
-
-            const data = await respuesta.json();
-            
-            const registros = Array.isArray(data) ? data : (data.historial || data.data || data.registros || []);
-
-            contenedor.innerHTML = '';
-
-            if (registros.length === 0) {
-                contenedor.innerHTML = '<div class="text-muted text-center mt-3">Sin movimientos registrados</div>';
-                return;
-            }
-
-            registros.slice(0, 50).forEach(mov => {
-                const div = document.createElement('div');
-                div.className = 'historial-item text-light shadow-sm';
-
-                const fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
-                const fecha = fechaRaw ? new Date(fechaRaw).toLocaleTimeString() : 'Reciente';
-                
-                const nombreCmd = mov.comando || mov.nombre_comando || mov.nombre || `Comando ID: ${mov.id_comando || mov.codigo || 'N/D'}`;
-                const codigoCmd = mov.codigo || mov.id_comando || mov.codigo_comando || '0';
-                const origenCmd = mov.origen || mov.source || 'Sistema IoT';
-
-                div.innerHTML = `
-                    <div class="d-flex justify-content-between">
-                        <strong><i class="fas fa-terminal me-1 text-primary"></i> [${codigoCmd}] ${nombreCmd}</strong>
-                        <span class="badge bg-secondary">${fecha}</span>
-                    </div>
-                    <div class="mt-1 small text-info"><i class="fas fa-wifi me-1"></i> Origen: ${origenCmd}</div>
-                `;
-                contenedor.appendChild(div);
-            });
-        } else {
-            contenedor.innerHTML = `<div class="text-danger text-center mt-3 small"><i class="fas fa-exclamation-triangle"></i> Error en la petición HTTP: ${respuesta.status}</div>`;
-        }
-    } catch (error) {
-        console.error("Error al cargar historial:", error);
-        contenedor.innerHTML = `<div class="text-danger text-center mt-3 small"><i class="fas fa-exclamation-triangle"></i> Error de conexión/lectura. ¿Ngrok bloqueó el acceso JSON? Abre F12 para ver detalles.</div>`;
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     initJoysticks();
     initWebSocket();
-    // cargarHistorial() ya se manda a llamar cuando el WebSocket se conecta
 });
