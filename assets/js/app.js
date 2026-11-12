@@ -51,6 +51,26 @@ function initWebSocket() {
         badgeWSS.innerHTML = `<i class="fas fa-plug me-1"></i>WSS: Conectado`;
     };
 
+    ws.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            const eventoStr = (data.evento || "").toLowerCase();
+            const origenStr = data.origen || "";
+
+            // Enciende indicador si llega evento de demo
+            if (eventoStr.includes("inicio_demo") || origenStr === "Demo Automática") {
+                mostrarIndicadorDemo(true);
+            }
+            
+            // Apaga indicador si llega evento de fin o cancelación de demo
+            if (eventoStr.includes("fin") || eventoStr.includes("cancel") || eventoStr.includes("completada")) {
+                mostrarIndicadorDemo(false);
+            }
+        } catch (e) {
+            console.error("No se pudo parsear el mensaje WSS", e);
+        }
+    };
+
     ws.onclose = () => {
         badgeWSS.className = "badge bg-danger p-2 fs-6 shadow-sm";
         badgeWSS.innerHTML = `<i class="fas fa-plug me-1"></i>WSS: Error`;
@@ -67,10 +87,21 @@ function enviarComandoWS(idComando) {
     }
 }
 
+function mostrarIndicadorDemo(activo) {
+    const badge = document.getElementById('badge-demo');
+    if (activo) {
+        badge.classList.remove('d-none');
+    } else {
+        badge.classList.add('d-none');
+    }
+}
+
 function forzarParo() {
     enviarComandoWS(13);
+    enviarComandoREST(13); 
     actualizarEtiqueta(document.getElementById('lbl-izq'), 'DETENIDO', 'bg-secondary');
     actualizarEtiqueta(document.getElementById('lbl-der'), 'DETENIDO', 'bg-secondary');
+    mostrarIndicadorDemo(false);
 }
 
 async function enviarComandoREST(idComando) {
@@ -95,9 +126,15 @@ async function enviarComandoREST(idComando) {
     }
 }
 
+function ejecutarDemoSeleccionada() {
+    const idDemo = document.getElementById('select-demo').value;
+    ejecutarDemo(idDemo);
+}
+
 async function ejecutarDemo(idDemo) {
     try {
-        await fetch(`https://${HOST_IP}/vehiculos/1/ejecutar-demo`, {
+        mostrarIndicadorDemo(true);
+        const res = await fetch(`https://${HOST_IP}/vehiculos/1/ejecutar-demo`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -105,8 +142,13 @@ async function ejecutarDemo(idDemo) {
             },
             body: JSON.stringify({ id_demo: parseInt(idDemo) })
         });
+        
+        if(!res.ok) {
+            mostrarIndicadorDemo(false);
+        }
     } catch (error) {
         console.error("Error al iniciar demo", error);
+        mostrarIndicadorDemo(false);
     }
 }
 
