@@ -60,11 +60,9 @@ function initWebSocket() {
             const idCmd = parseInt(data.id_comando);
             const comandoStr = (data.comando || "").toUpperCase();
 
-            // 1. Detectar inicio de Demo Automática
             if (eventoStr.includes("inicio_demo") || origenStr === "Demo Automática") {
                 mostrarIndicadorDemo(true);
                 
-                // 2. Apagar la alerta si la Demo lanza el comando "APAGAR_TODO" (ID 13) al terminar
                 if (idCmd === 13 || comandoStr === "APAGAR_TODO") {
                     setTimeout(() => {
                         mostrarIndicadorDemo(false);
@@ -72,7 +70,6 @@ function initWebSocket() {
                 }
             }
             
-            // 3. Apagado genérico si detectamos palabras clave de fin en el evento
             if (eventoStr.includes("fin") || eventoStr.includes("cancel") || eventoStr.includes("completada")) {
                 mostrarIndicadorDemo(false);
             }
@@ -99,10 +96,12 @@ function enviarComandoWS(idComando) {
 
 function mostrarIndicadorDemo(activo) {
     const badge = document.getElementById('badge-demo');
-    if (activo) {
-        badge.classList.remove('d-none');
-    } else {
-        badge.classList.add('d-none');
+    if (badge) {
+        if (activo) {
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
     }
 }
 
@@ -138,9 +137,13 @@ async function enviarComandoREST(idComando) {
 
 function ejecutarDemoSeleccionada() {
     const input = document.getElementById('input-demo');
+    if (!input) {
+        console.error("No se encontró el elemento input-demo");
+        return;
+    }
     const idDemo = parseInt(input.value);
     
-    if (idDemo && idDemo > 0) {
+    if (!isNaN(idDemo) && idDemo > 0) {
         ejecutarDemo(idDemo);
     } else {
         alert("Por favor, ingresa un número de Demo válido (ej. 1)");
@@ -181,10 +184,10 @@ function toggleEncendido() {
     enviarComandoREST(5);
 }
 
-// NUEVO: Verifica que el backend esté arriba para encender los badges en verde al cargar la página
+// Comprobación de salud basada en la respuesta del historial para encender RDS en verde de inmediato
 async function verificarSaludAPI() {
     try {
-        const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, {
+        const res = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, {
             method: 'GET',
             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' }
         });
@@ -196,12 +199,12 @@ async function verificarSaludAPI() {
             badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Online`;
         }
     } catch (error) {
-        console.error("No se pudo conectar a la API al inicio:", error);
+        console.error("No se pudo conectar al historial al inicio:", error);
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initJoysticks();
     initWebSocket();
-    verificarSaludAPI(); // Llama a los indicadores al abrir
+    verificarSaludAPI();
 });
