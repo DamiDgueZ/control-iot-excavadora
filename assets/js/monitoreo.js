@@ -20,14 +20,13 @@ const fetchOptions = {
     }
 };
 
-// FUNCIÓN PARA OBTENER EL ÚLTIMO ESTADO (CORREGIDA CON EL ARREGLO DE SWAGGER Y HORA CDMX)
+// FUNCIÓN PARA OBTENER EL ÚLTIMO ESTADO (CON HORA CDMX)
 async function fetchUltimoEstado() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, fetchOptions);
         if (res.ok) {
             const data = await res.json();
             
-            // Extraemos de manera segura el objeto dentro del arreglo 'estado' (visto en Swagger)
             const listaEstados = data.estado || data.data || [];
             const objEstado = Array.isArray(listaEstados) ? listaEstados[0] : listaEstados;
 
@@ -35,7 +34,6 @@ async function fetchUltimoEstado() {
                 const nombreCmd = objEstado.comando || objEstado.nombre || objEstado.nombre_comando || 'DESCONOCIDO';
                 let fechaRaw = objEstado.fecha_actualizacion || objEstado.fecha_hora || objEstado.fecha || new Date().toISOString();
                 
-                // Asegurar formato UTC si el servidor no manda la Z
                 if (typeof fechaRaw === 'string' && !fechaRaw.endsWith('Z') && !fechaRaw.includes('+') && !fechaRaw.includes('-', 10)) {
                     fechaRaw += 'Z';
                 }
@@ -64,7 +62,7 @@ async function fetchUltimoEstado() {
     }
 }
 
-// HISTORIAL DE MONITOREO CON FILTRO ESTRICTO Y HORA CDMX
+// HISTORIAL DE MONITOREO CON RELLENO GARANTIZADO DE 10 FILAS
 async function fetchHistorialMonitoreo() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, fetchOptions);
@@ -92,7 +90,7 @@ async function fetchHistorialMonitoreo() {
                 return;
             }
 
-            // Tomamos hasta 10 registros
+            // Tomamos los primeros 10 disponibles
             const ultimos10 = registrosLimpios.slice(0, 10);
             
             ultimos10.forEach((mov, index) => {
@@ -128,6 +126,22 @@ async function fetchHistorialMonitoreo() {
                 `;
                 tablaHistorial.appendChild(tr);
             });
+
+            // SI HAY MENOS DE 10 REGISTROS, RELLENAMOS CON FILAS VACÍAS PARA MANTENER LA ESTRUCTURA VISUAL
+            const totalFilasActuales = ultimos10.length;
+            if (totalFilasActuales < 10) {
+                for (let i = totalFilasActuales + 1; i <= 10; i++) {
+                    const trVacio = document.createElement('tr');
+                    trVacio.innerHTML = `
+                        <th scope="row" class="text-muted opacity-50">${i}</th>
+                        <td class="text-muted opacity-50 fst-italic">---</td>
+                        <td class="text-muted opacity-50">--/--/----</td>
+                        <td class="text-muted opacity-50">--:--:--</td>
+                    `;
+                    tablaHistorial.appendChild(trVacio);
+                }
+            }
+
         } else {
             badgeAPI.className = "badge bg-danger p-2 fs-6 shadow-sm";
             badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: Fallo HTTP ${res.status}`;
