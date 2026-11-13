@@ -8,12 +8,21 @@ body {
     min-height: 100vh;
 }
 
+/* Pantallas grandes (Laptops / Escritorio): Estático y sin scroll */
 html, body {
     width: 100%;
     height: 100vh;
-    overflow: hidden !important; /* Bloquea cualquier scroll vertical u horizontal */
+    overflow: hidden !important; /* Bloquea cualquier scroll vertical u horizontal en PC */
     margin: 0;
     padding: 0;
+}
+
+/* Dispositivos móviles y tablets (Pantallas menores a 992px): Se libera el scroll natural */
+@media (max-width: 991.98px) {
+    html, body {
+        height: auto !important;
+        overflow: auto !important;
+    }
 }
 
 .gamepad-container {
