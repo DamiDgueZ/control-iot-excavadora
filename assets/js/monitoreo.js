@@ -62,7 +62,7 @@ async function fetchUltimoEstado() {
     }
 }
 
-// HISTORIAL DE MONITOREO CON FILTRO Y NUMERACIÓN LIMPIA DEL 1 AL 10
+// HISTORIAL DE MONITOREO CON FILTRO BLINDADO Y LLENADO EXACTO DE 10 FILAS
 async function fetchHistorialMonitoreo() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, fetchOptions);
@@ -78,11 +78,15 @@ async function fetchHistorialMonitoreo() {
             
             tablaHistorial.innerHTML = '';
 
-            // FILTRO ESTRICTO: Excluimos comandos internos de pausa o de origen demo
+            // FILTRO BLINDADO: Solo descartamos pausas explícitas o comandos de origen demo
             const registrosLimpios = registros.filter(mov => {
                 const origen = (mov.origen || "").toLowerCase();
-                const cmd = (mov.comando || mov.nombre || "").toLowerCase();
-                return !origen.includes("demo") && !origen.includes("pausa") && !cmd.includes("apagar_todo");
+                const cmd = (mov.comando || mov.nombre_comando || mov.nombre || "").toLowerCase();
+                
+                if (origen.includes("demo") || origen.includes("pausa")) return false;
+                if (cmd === "apagar_todo" || cmd.includes("apagar todo")) return false;
+                
+                return true;
             });
 
             if (registrosLimpios.length === 0) {
@@ -90,16 +94,15 @@ async function fetchHistorialMonitoreo() {
                 return;
             }
 
-            // Tomamos estrictamente los primeros 10 elementos del arreglo filtrado
+            // Tomamos estrictamente los primeros 10 elementos válidos
             const ultimos10 = registrosLimpios.slice(0, 10);
             
-            // Creamos exactamente 10 filas siempre para mantener la estructura simétrica
+            // Creamos exactamente 10 filas de forma simétrica
             for (let i = 0; i < 10; i++) {
                 const tr = document.createElement('tr');
                 const numeroFila = i + 1;
 
                 if (i < ultimos10.length) {
-                    // Fila con datos reales
                     const mov = ultimos10[i];
                     const nombreCmd = mov.comando || mov.nombre_comando || mov.nombre || `Cód: ${mov.id_comando || 'N/D'}`;
                     let fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
@@ -130,7 +133,7 @@ async function fetchHistorialMonitoreo() {
                         <td>${horaStr}</td>
                     `;
                 } else {
-                    // Fila de relleno vacía para completar las 10 filas visuales
+                    // Fila vacía de relleno si llegaran a faltar elementos
                     tr.innerHTML = `
                         <th scope="row" class="text-muted opacity-50">${numeroFila}</th>
                         <td class="text-muted opacity-50 fst-italic">---</td>
