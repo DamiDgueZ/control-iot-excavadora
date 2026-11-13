@@ -1,7 +1,7 @@
 const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
 let sistemaEncendido = false;
-let estadoLuces = false;   // Estado lógico para animación de luces
-let estadoClaxon = false;  // Estado lógico para animación de claxon
+let estadoLuces = false;   
+let estadoClaxon = false;  
 let ws;
 let demoTimeout = null; 
 
@@ -63,7 +63,6 @@ function initWebSocket() {
             const eventoStr = (data.evento || "").toLowerCase();
             const origenStr = (data.origen || "").toLowerCase();
 
-            // Consultar último estado de inmediato para actualizar el indicador inferior
             obtenerUltimoEstadoControl();
 
             if (eventoStr.includes("inicio_demo") || eventoStr === "inicio_demo") {
@@ -135,14 +134,14 @@ async function enviarComandoREST(idComando) {
         if(res.ok) {
             badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
             badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
-            obtenerUltimoEstadoControl();
+            setTimeout(obtenerUltimoEstadoControl, 300); // Refresca tras la petición REST
         }
     } catch (error) {
         console.error("Error REST:", error);
     }
 }
 
-// NUEVO: Obtiene el último movimiento para pintarlo en el mini indicador inferior
+// CORREGIDO: Lee la estructura real de Swagger (data.estado[0])
 async function obtenerUltimoEstadoControl() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, {
@@ -151,47 +150,56 @@ async function obtenerUltimoEstadoControl() {
         });
         if (res.ok) {
             const data = await res.json();
-            const estado = data.estado || data.data || data;
-            const nombreCmd = estado.comando || estado.nombre_comando || estado.nombre || 'ESPERANDO';
-            const fechaRaw = estado.fecha_hora || estado.fecha || estado.timestamp || new Date().toISOString();
-            const dateObj = new Date(fechaRaw);
+            // Swagger muestra que 'estado' es un arreglo: data.estado[0]
+            const listaEstados = data.estado || data.data || [];
+            const objEstado = Array.isArray(listaEstados) ? listaEstados[0] : listaEstados;
 
-            ctrlUltimoMov.textContent = nombreCmd;
-            ctrlUltimoTiempo.textContent = dateObj.toLocaleTimeString('es-MX');
+            if (objEstado) {
+                const nombreCmd = objEstado.comando || objEstado.nombre || 'DESCONOCIDO';
+                const fechaRaw = objEstado.fecha_actualizacion || objEstado.fecha_hora || new Date().toISOString();
+                const dateObj = new Date(fechaRaw);
+
+                ctrlUltimoMov.textContent = nombreCmd;
+                ctrlUltimoTiempo.textContent = isNaN(dateObj.getTime()) ? fechaRaw : dateObj.toLocaleTimeString('es-MX');
+            }
         }
     } catch (e) {
         console.error("Error al refrescar estado en control:", e);
     }
 }
 
-// ANIMACIÓN TOGGLE PARA LUCES
+// ANIMACIÓN TOGGLE ESTILO BOTÓN ENCENDIDO PARA LUCES
 function toggleLuces() {
     estadoLuces = !estadoLuces;
     const btnLuces = document.getElementById('btn-luces');
     if (estadoLuces) {
         btnLuces.classList.replace('btn-outline-warning', 'btn-warning');
-        btnLuces.style.background = "#ffc107";
+        btnLuces.style.background = "linear-gradient(135deg, #ffc107, #d39e00)";
         btnLuces.style.color = "#000";
+        btnLuces.style.borderColor = "#ffc107";
     } else {
         btnLuces.classList.replace('btn-warning', 'btn-outline-warning');
         btnLuces.style.background = "transparent";
         btnLuces.style.color = "#ffc107";
+        btnLuces.style.borderColor = "";
     }
     enviarComandoREST(7);
 }
 
-// ANIMACIÓN TOGGLE PARA CLAXON
+// ANIMACIÓN TOGGLE ESTILO BOTÓN ENCENDIDO PARA CLAXON
 function toggleClaxon() {
     estadoClaxon = !estadoClaxon;
     const btnClaxon = document.getElementById('btn-claxon');
     if (estadoClaxon) {
         btnClaxon.classList.replace('btn-outline-info', 'btn-info');
-        btnClaxon.style.background = "#0dcaf0";
+        btnClaxon.style.background = "linear-gradient(135deg, #0dcaf0, #087990)";
         btnClaxon.style.color = "#000";
+        btnClaxon.style.borderColor = "#0dcaf0";
     } else {
         btnClaxon.classList.replace('btn-info', 'btn-outline-info');
         btnClaxon.style.background = "transparent";
         btnClaxon.style.color = "#0dcaf0";
+        btnClaxon.style.borderColor = "";
     }
     enviarComandoREST(8);
 }
