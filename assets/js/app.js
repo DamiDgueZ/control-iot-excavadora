@@ -1,7 +1,7 @@
 const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
 let sistemaEncendido = false;
 let ws;
-let demoTimeout = null; // Variable para controlar el temporizador de la demo
+let demoTimeout = null; 
 
 const badgeWSS = document.getElementById('badge-wss');
 const badgeAPI = document.getElementById('badge-api');
@@ -58,28 +58,21 @@ function initWebSocket() {
             const data = JSON.parse(event.data);
             const eventoStr = (data.evento || "").toLowerCase();
             const origenStr = (data.origen || "").toLowerCase();
-            const comandoStr = (data.comando || "").toUpperCase();
-            const idCmd = parseInt(data.id_comando);
 
-            // Detectar si la demo inicia
+            // Detectar de forma limpia si la demo inicia
             if (eventoStr.includes("inicio_demo") || origenStr.includes("demo")) {
                 mostrarIndicadorDemo(true);
             }
             
-            // Detectar si la demo concluyó (ampliamos las palabras clave de cierre)
+            // Únicamente apagamos la etiqueta si el backend manda un evento explícito de fin o cancelación
             if (
+                eventoStr.includes("fin_demo") ||
                 eventoStr.includes("fin") || 
                 eventoStr.includes("cancel") || 
                 eventoStr.includes("completada") || 
-                eventoStr.includes("terminada") ||
-                eventoStr.includes("detenido") ||
-                comandoStr.includes("APAGAR") ||
-                idCmd === 13
+                eventoStr.includes("terminada")
             ) {
-                // Pequeño retardo para asegurar que la UI alcance a reflejar el último paso
-                setTimeout(() => {
-                    mostrarIndicadorDemo(false);
-                }, 500);
+                mostrarIndicadorDemo(false);
             }
         } catch (e) {
             console.error("No se pudo parsear el mensaje WSS", e);
@@ -108,12 +101,11 @@ function mostrarIndicadorDemo(activo) {
         if (activo) {
             badge.classList.remove('d-none');
             
-            // SEGURIDAD: Si por alguna razón el socket no avisa del fin, 
-            // apagamos el aviso automáticamente a los 15 segundos para evitar que se quede pegado.
+            // Margen de seguridad: Apaga la etiqueta a los 20 segundos por si el backend no emite evento de fin
             if (demoTimeout) clearTimeout(demoTimeout);
             demoTimeout = setTimeout(() => {
                 badge.classList.add('d-none');
-            }, 15000);
+            }, 20000);
 
         } else {
             badge.classList.add('d-none');
