@@ -57,20 +57,19 @@ function initWebSocket() {
         try {
             const data = JSON.parse(event.data);
             const eventoStr = (data.evento || "").toLowerCase();
-            const origenStr = (data.origen || "").toLowerCase();
 
-            // Detectar de forma limpia si la demo inicia
-            if (eventoStr.includes("inicio_demo") || origenStr.includes("demo")) {
+            // 1. Encender la etiqueta exclusivamente si el backend avisa el inicio de la demo
+            if (eventoStr.includes("inicio_demo") || eventoStr === "demo_iniciada") {
                 mostrarIndicadorDemo(true);
             }
             
-            // Únicamente apagamos la etiqueta si el backend manda un evento explícito de fin o cancelación
+            // 2. Apagar la etiqueta ÚNICAMENTE ante eventos explícitos de conclusión de demo 
+            // (Se eliminó el rastreo del comando 13 para evitar falsos apagados)
             if (
                 eventoStr.includes("fin_demo") ||
-                eventoStr.includes("fin") || 
-                eventoStr.includes("cancel") || 
-                eventoStr.includes("completada") || 
-                eventoStr.includes("terminada")
+                eventoStr.includes("demo_terminada") || 
+                eventoStr.includes("cancelar_demo") || 
+                eventoStr.includes("completada")
             ) {
                 mostrarIndicadorDemo(false);
             }
@@ -101,7 +100,7 @@ function mostrarIndicadorDemo(activo) {
         if (activo) {
             badge.classList.remove('d-none');
             
-            // Margen de seguridad: Apaga la etiqueta a los 20 segundos por si el backend no emite evento de fin
+            // Margen de seguridad: Apaga la etiqueta a los 20 segundos por si acaso
             if (demoTimeout) clearTimeout(demoTimeout);
             demoTimeout = setTimeout(() => {
                 badge.classList.add('d-none');
