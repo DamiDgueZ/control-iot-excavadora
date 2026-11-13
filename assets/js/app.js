@@ -63,7 +63,8 @@ function initWebSocket() {
             const eventoStr = (data.evento || "").toLowerCase();
             const origenStr = (data.origen || "").toLowerCase();
 
-            obtenerUltimoEstadoControl();
+            // Refrescar el último estado inmediatamente al recibir cualquier evento por WebSocket
+            setTimeout(obtenerUltimoEstadoControl, 300);
 
             if (eventoStr.includes("inicio_demo") || eventoStr === "inicio_demo") {
                 mostrarIndicadorDemo(true);
@@ -90,6 +91,8 @@ function enviarComandoWS(idComando) {
             id_comando: parseInt(idComando),
             origen: "Joystick WSS"
         }));
+        // Refrescar la barra inferior al enviar comando por websocket
+        setTimeout(obtenerUltimoEstadoControl, 400);
     }
 }
 
@@ -134,14 +137,14 @@ async function enviarComandoREST(idComando) {
         if(res.ok) {
             badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
             badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
-            setTimeout(obtenerUltimoEstadoControl, 300); // Refresca tras la petición REST
+            setTimeout(obtenerUltimoEstadoControl, 400);
         }
     } catch (error) {
         console.error("Error REST:", error);
     }
 }
 
-// CORREGIDO: Lee la estructura real de Swagger (data.estado[0])
+// LÓGICA CORREGIDA PARA LEER EL ÚLTIMO ESTADO DESDE SWAGGER (data.estado[0])
 async function obtenerUltimoEstadoControl() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, {
@@ -150,17 +153,24 @@ async function obtenerUltimoEstadoControl() {
         });
         if (res.ok) {
             const data = await res.json();
-            // Swagger muestra que 'estado' es un arreglo: data.estado[0]
-            const listaEstados = data.estado || data.data || [];
+            
+            // Swagger muestra que 'estado' es un arreglo: data.estado[0] o data.data
+            const listaEstados = data.estado || data.data || data;
             const objEstado = Array.isArray(listaEstados) ? listaEstados[0] : listaEstados;
 
             if (objEstado) {
-                const nombreCmd = objEstado.comando || objEstado.nombre || 'DESCONOCIDO';
-                const fechaRaw = objEstado.fecha_actualizacion || objEstado.fecha_hora || new Date().toISOString();
+                const nombreCmd = objEstado.comando || objEstado.nombre || objEstado.nombre_comando || 'SIN MOVIMIENTO';
+                const fechaRaw = objEstado.fecha_actualizacion || objEstado.fecha_hora || objEstado.fecha || new Date().toISOString();
+                
+                // Si la fecha es un string de fecha válido, lo formateamos a hora local
+                let horaFormateada = fechaRaw;
                 const dateObj = new Date(fechaRaw);
+                if (!isNaN(dateObj.getTime())) {
+                    horaFormateada = dateObj.toLocaleTimeString('es-MX');
+                }
 
                 ctrlUltimoMov.textContent = nombreCmd;
-                ctrlUltimoTiempo.textContent = isNaN(dateObj.getTime()) ? fechaRaw : dateObj.toLocaleTimeString('es-MX');
+                ctrlUltimoTiempo.textContent = horaFormateada;
             }
         }
     } catch (e) {
@@ -168,7 +178,7 @@ async function obtenerUltimoEstadoControl() {
     }
 }
 
-// ANIMACIÓN TOGGLE ESTILO BOTÓN ENCENDIDO PARA LUCES
+// ANIMACIÓN TOGGLE PERMANENTE PARA LUCES
 function toggleLuces() {
     estadoLuces = !estadoLuces;
     const btnLuces = document.getElementById('btn-luces');
@@ -186,7 +196,7 @@ function toggleLuces() {
     enviarComandoREST(7);
 }
 
-// ANIMACIÓN TOGGLE ESTILO BOTÓN ENCENDIDO PARA CLAXON
+// ANIMACIÓN TOGGLE PERMANENTE PARA CLAXON
 function toggleClaxon() {
     estadoClaxon = !estadoClaxon;
     const btnClaxon = document.getElementById('btn-claxon');
