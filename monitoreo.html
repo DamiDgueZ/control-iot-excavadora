@@ -10,24 +10,40 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
     <style>
+        html, body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden !important;
+            margin: 0;
+            padding: 0;
+        }
         .card-ultimo-mov {
-            background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(0, 0, 0, 0.6));
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.25), rgba(10, 12, 16, 0.85));
             border: 1px solid rgba(13, 110, 253, 0.4);
-            border-left: 5px solid #0d6efd;
-            border-radius: 15px;
+            border-left: 6px solid #0d6efd;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
         .table-glass {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            overflow: hidden;
+            background: rgba(20, 24, 33, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .table-dark-custom {
+            background-color: transparent !important;
+        }
+        .table-dark-custom th, .table-dark-custom td {
+            background-color: transparent !important;
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
 
-<body class="p-0">
+<body class="p-0 d-flex flex-column vh-100">
     <!-- Navbar / Navegación y Estado -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg mb-4 border-bottom border-secondary" style="background: rgba(10,12,16,0.95) !important;">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0" style="background: rgba(10,12,16,0.95) !important;">
         <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma IoT</span>
         
         <ul class="navbar-nav me-auto flex-row gap-3">
@@ -47,40 +63,40 @@
     </nav>
 
     <!-- Contenedor Principal de Monitoreo -->
-    <div class="container max-w-1200 px-4 flex-grow-1 d-flex flex-column">
+    <div class="container max-w-1200 px-4 flex-grow-1 d-flex flex-column justify-content-center my-2">
         
-        <!-- Tarjeta: Último Movimiento -->
-        <div class="row mb-4">
+        <!-- Tarjeta: Último Movimiento (Grande) -->
+        <div class="row mb-3">
             <div class="col-12">
                 <div class="card-ultimo-mov p-4 shadow-lg">
-                    <h5 class="text-muted text-uppercase mb-2"><i class="fas fa-arrow-circle-up me-2"></i>Último estado reportado</h5>
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end">
+                    <h6 class="text-info text-uppercase mb-1 fw-bold"><i class="fas fa-satellite-dish me-2"></i>Último estado reportado en tiempo real</h6>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                         <div>
-                            <h1 id="mov-nombre" class="display-5 fw-bold text-info m-0">ESPERANDO DATOS...</h1>
-                            <span id="mov-vehiculo" class="text-light fs-5">Vehículo IoT</span>
+                            <h1 id="mov-nombre" class="display-6 fw-bold text-warning m-0 font-monospace">ESPERANDO DATOS...</h1>
+                            <span id="mov-vehiculo" class="text-secondary small">Vehículo ID: 1 · Excavadora IoT</span>
                         </div>
-                        <div class="text-md-end mt-3 mt-md-0">
-                            <div class="fs-5"><i class="far fa-calendar-alt text-secondary me-2"></i><span id="mov-fecha">--/--/----</span></div>
-                            <div class="fs-5"><i class="far fa-clock text-secondary me-2"></i><span id="mov-hora">--:--:--</span></div>
+                        <div class="text-md-end mt-2 mt-md-0">
+                            <div class="fs-6 text-light"><i class="far fa-calendar-alt text-info me-2"></i><span id="mov-fecha">--/--/----</span></div>
+                            <div class="fs-5 fw-bold text-info"><i class="far fa-clock text-info me-2"></i><span id="mov-hora">--:--:--</span></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabla: Últimos 10 Movimientos -->
-        <div class="row flex-grow-1 mb-4">
+        <!-- Tabla: Últimos Movimientos -->
+        <div class="row mb-2">
             <div class="col-12">
-                <div class="table-glass shadow-lg p-3 h-100 border border-secondary">
-                    <h4 class="mb-3 text-warning"><i class="fas fa-list-ol me-2"></i>Últimos 10 Movimientos Individuales</h4>
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover table-striped align-middle">
-                            <thead class="text-info">
+                <div class="table-glass shadow-lg p-3 border border-secondary">
+                    <h5 class="mb-3 text-warning fw-bold"><i class="fas fa-list-ol me-2"></i>Historial de Movimientos Individuales (AWS RDS)</h5>
+                    <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
+                        <table class="table table-dark-custom table-hover align-middle mb-0">
+                            <thead class="text-info text-uppercase fs-7 sticky-top bg-dark">
                                 <tr>
                                     <th scope="col" width="10%">#</th>
-                                    <th scope="col" width="40%">Movimiento</th>
-                                    <th scope="col" width="25%">Fecha</th>
-                                    <th scope="col" width="25%">Hora</th>
+                                    <th scope="col" width="40%">Movimiento / Comando</th>
+                                    <th scope="col" width="25%">Fecha (CDMX)</th>
+                                    <th scope="col" width="25%">Hora (CDMX)</th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-historial-monitoreo">
@@ -98,9 +114,9 @@
 
     </div>
 
-    <!-- Pie de Página -->
-    <footer class="text-center p-3 text-secondary mt-auto" style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
-        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong><br>Desarrollado por Damaris Domínguez Zapata · 2026</small>
+    <!-- Pie de Página Fijo -->
+    <footer class="text-center p-2 text-secondary flex-shrink-0" style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong> | Desarrollado por Damaris Domínguez Zapata · 2026</small>
     </footer>
 
     <!-- LÓGICA LOCAL DE MONITOREO -->

@@ -20,27 +20,51 @@ const fetchOptions = {
     }
 };
 
+// FUNCIÓN PARA OBTENER EL ÚLTIMO ESTADO (CORREGIDA CON EL ARREGLO DE SWAGGER Y HORA CDMX)
 async function fetchUltimoEstado() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, fetchOptions);
         if (res.ok) {
             const data = await res.json();
-            const estado = data.estado || data.data || data; 
             
-            const nombreCmd = estado.comando || estado.nombre_comando || estado.nombre || 'DESCONOCIDO';
-            const fechaRaw = estado.fecha_hora || estado.fecha || estado.timestamp || new Date().toISOString();
-            
-            const dateObj = new Date(fechaRaw);
-            
-            movNombre.textContent = nombreCmd;
-            movFecha.textContent = dateObj.toLocaleDateString('es-MX');
-            movHora.textContent = dateObj.toLocaleTimeString('es-MX');
+            // Extraemos de manera segura el objeto dentro del arreglo 'estado' (visto en Swagger)
+            const listaEstados = data.estado || data.data || [];
+            const objEstado = Array.isArray(listaEstados) ? listaEstados[0] : listaEstados;
+
+            if (objEstado && movNombre && movFecha && movHora) {
+                const nombreCmd = objEstado.comando || objEstado.nombre || objEstado.nombre_comando || 'DESCONOCIDO';
+                let fechaRaw = objEstado.fecha_actualizacion || objEstado.fecha_hora || objEstado.fecha || new Date().toISOString();
+                
+                // Asegurar formato UTC si el servidor no manda la Z
+                if (typeof fechaRaw === 'string' && !fechaRaw.endsWith('Z') && !fechaRaw.includes('+') && !fechaRaw.includes('-', 10)) {
+                    fechaRaw += 'Z';
+                }
+
+                const dateObj = new Date(fechaRaw);
+                
+                if (!isNaN(dateObj.getTime())) {
+                    movFecha.textContent = dateObj.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City' });
+                    movHora.textContent = dateObj.toLocaleTimeString('es-MX', {
+                        timeZone: 'America/Mexico_City',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
+                } else {
+                    movFecha.textContent = "--/--/----";
+                    movHora.textContent = "--:--:--";
+                }
+
+                movNombre.textContent = nombreCmd;
+            }
         }
     } catch (error) {
         console.error("Error al obtener último estado:", error);
     }
 }
 
+// HISTORIAL DE MONITOREO CON FILTRO ESTRICTO Y HORA CDMX
 async function fetchHistorialMonitoreo() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, fetchOptions);
@@ -56,7 +80,7 @@ async function fetchHistorialMonitoreo() {
             
             tablaHistorial.innerHTML = '';
 
-            // FILTRO ESTRICTO: Excluimos comandos internos de pausa o de origen demo de la tabla individual
+            // FILTRO ESTRICTO: Excluimos comandos internos de pausa o de origen demo
             const registrosLimpios = registros.filter(mov => {
                 const origen = (mov.origen || "").toLowerCase();
                 const cmd = (mov.comando || mov.nombre || "").toLowerCase();
@@ -68,19 +92,39 @@ async function fetchHistorialMonitoreo() {
                 return;
             }
 
+            // Tomamos hasta 10 registros
             const ultimos10 = registrosLimpios.slice(0, 10);
             
             ultimos10.forEach((mov, index) => {
                 const nombreCmd = mov.comando || mov.nombre_comando || mov.nombre || `Cód: ${mov.id_comando || 'N/D'}`;
-                const fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
+                let fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
+                
+                if (typeof fechaRaw === 'string' && !fechaRaw.endsWith('Z') && !fechaRaw.includes('+') && !fechaRaw.includes('-', 10)) {
+                    fechaRaw += 'Z';
+                }
+
                 const dateObj = fechaRaw ? new Date(fechaRaw) : new Date();
+                
+                let fechaStr = "--/--/----";
+                let horaStr = "--:--:--";
+
+                if (!isNaN(dateObj.getTime())) {
+                    fechaStr = dateObj.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City' });
+                    horaStr = dateObj.toLocaleTimeString('es-MX', {
+                        timeZone: 'America/Mexico_City',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
+                }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <th scope="row" class="text-secondary">${index + 1}</th>
                     <td class="fw-bold text-light">${nombreCmd}</td>
-                    <td>${dateObj.toLocaleDateString('es-MX')}</td>
-                    <td>${dateObj.toLocaleTimeString('es-MX')}</td>
+                    <td>${fechaStr}</td>
+                    <td>${horaStr}</td>
                 `;
                 tablaHistorial.appendChild(tr);
             });
