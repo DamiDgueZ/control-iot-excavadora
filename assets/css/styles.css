@@ -17,30 +17,6 @@ html, body {
     padding: 0;
 }
 
-/* Dispositivos móviles y tablets (Pantallas menores a 992px): Se libera el scroll y se adapta el contenedor */
-@media (max-width: 991.98px) {
-    html, body {
-        height: auto !important;
-        overflow: auto !important;
-    }
-    
-    /* El contenedor principal ocupa el ancho de la pantalla con un pequeño margen seguro */
-    .gamepad-container {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        margin: 10px auto 30px auto !important;
-        border-radius: 20px !important;
-        padding: 10px !important;
-    }
-
-    /* Reducir ligeramente el joystick en celulares para que no desborde */
-    .joystick-zone {
-        height: 180px !important;
-        width: 180px !important;
-    }
-}
-
 .gamepad-container {
     background: linear-gradient(135deg, rgba(20, 24, 33, 0.95), rgba(10, 12, 16, 0.95));
     backdrop-filter: blur(15px);
@@ -120,34 +96,51 @@ footer {
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Forzar adaptabilidad absoluta en celulares */
+/* ==========================================================
+   ADATABILIDAD Y SCROLL INTELIGENTE PARA DISPOSITIVOS MÓVILES
+   ========================================================== */
 @media (max-width: 991.98px) {
-    .container, .container-fluid {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        max-width: 100% !important;
-    }
-    
-    /* Evitar que cualquier elemento interno desborde la pantalla */
-    body * {
-        max-width: 100%;
-    }
-}
-
-/* FORZAR SCROLL Y ADAPTABILIDAD EN DISPOSITIVOS MÓVILES */
-@media (max-width: 991.98px) {
+    /* Desbloquea por completo el scroll vertical y ajusta el alto en celular */
     html, body {
         height: auto !important;
         min-height: 100vh !important;
-        overflow-y: auto !important; /* Desbloquea por completo el scroll vertical en el celular */
-        overflow-x: hidden !important; /* Evita que se mueva de lado a lado feo */
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
     }
 
+    /* Anula clases rígidas de Bootstrap para que fluya el contenido */
+    .vh-100, [class*="vh-"] {
+        height: auto !important;
+        min-height: auto !important;
+    }
+
+    .container, .container-fluid {
+        height: auto !important;
+        min-height: auto !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        max-width: 100% !important;
+        flex: none !important;
+    }
+    
+    /* Adapta la tarjeta del control al ancho del celular con espacio para deslizar */
     .gamepad-container {
-        width: 95% !important;
+        width: 100% !important;
         max-width: 100% !important;
         height: auto !important;
-        margin: 20px auto !important;
+        margin: 15px auto 40px auto !important;
+        border-radius: 20px !important;
         padding: 15px !important;
+    }
+
+    /* Reduce un poco el joystick para evitar desbordamientos */
+    .joystick-zone {
+        height: 180px !important;
+        width: 180px !important;
+    }
+
+    /* Evita que elementos internos fuercen desbordes horizontales */
+    body * {
+        max-width: 100%;
     }
 }
