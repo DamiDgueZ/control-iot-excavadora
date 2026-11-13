@@ -2,8 +2,6 @@ const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
 let sistemaEncendido = false;
 let ws;
 let demoTimeout = null; 
-let contadorApagarTodo = 0; // NUEVO: Contador para detectar el doble comando 13
-let ultimoComandoTiempo = 0; // NUEVO: Control de tiempo para el doble comando
 
 const badgeWSS = document.getElementById('badge-wss');
 const badgeAPI = document.getElementById('badge-api');
@@ -60,36 +58,21 @@ function initWebSocket() {
             const data = JSON.parse(event.data);
             const eventoStr = (data.evento || "").toLowerCase();
             const origenStr = (data.origen || "").toLowerCase();
-            const idCmd = parseInt(data.id_comando);
-            const comandoStr = (data.comando || "").toUpperCase();
+            const mensajeStr = JSON.stringify(data).toLowerCase();
 
-            // 1. Detectar inicio de demo
+            // 1. Detectar inicio de demo por evento o por origen
             if (eventoStr.includes("inicio_demo") || origenStr.includes("demo")) {
                 mostrarIndicadorDemo(true);
-                contadorApagarTodo = 0; // Reiniciamos contador al iniciar
             }
             
-            // 2. DETECTOR DE DOBLE COMANDO 13 (Indicador de fin de demo)
-            const esApagarTodo = (idCmd === 13 || comandoStr.includes("APAGAR"));
-            if (esApagarTodo) {
-                const ahora = Date.now();
-                // Si pasa un comando 13 y el anterior ocurrió hace menos de 2 segundos, contamos el segundo toque
-                if (ahora - ultimoComandoTiempo < 2000) {
-                    contadorApagarTodo++;
-                } else {
-                    contadorApagarTodo = 1; // Primer toque aislado (como soltar joystick)
-                }
-                ultimoComandoTiempo = ahora;
-
-                // Si detectamos que el comando 13 se ejecutó dos veces seguidas, ¡la demo terminó!
-                if (contadorApagarTodo >= 2) {
-                    mostrarIndicadorDemo(false);
-                    contadorApagarTodo = 0;
-                }
-            }
-
-            // 3. Apagado por mensaje explícito de fin si lo hubiera
-            if (eventoStr.includes("fin_demo") || eventoStr.includes("completada") || eventoStr.includes("terminada")) {
+            // 2. Detectar cualquier indicio de fin de demo en el mensaje del socket
+            if (
+                mensajeStr.includes("fin") || 
+                mensajeStr.includes("terminada") || 
+                mensajeStr.includes("completada") || 
+                mensajeStr.includes("cancel") || 
+                eventoStr.includes("fin_demo")
+            ) {
                 mostrarIndicadorDemo(false);
             }
         } catch (e) {
@@ -119,11 +102,12 @@ function mostrarIndicadorDemo(activo) {
         if (activo) {
             badge.classList.remove('d-none');
             
-            // Margen de seguridad máximo de 30s por si acaso
+            // TEMPORIZADOR INTELIGENTE: Apaga la etiqueta automáticamente a los 16 segundos 
+            // (tiempo exacto calculado para que cubra tus demos de 12-15s sin quedarse pegado).
             if (demoTimeout) clearTimeout(demoTimeout);
             demoTimeout = setTimeout(() => {
                 badge.classList.add('d-none');
-            }, 30000);
+            }, 16000);
 
         } else {
             badge.classList.add('d-none');
@@ -136,7 +120,8 @@ function forzarParo() {
     enviarComandoWS(13);
     enviarComandoREST(13); 
     actualizarEtiqueta(document.getElementById('lbl-izq'), 'DETENIDO', 'bg-secondary');
-    actualizarEtiqueta(document.getElementById('lbl-der'), 'DETENIDO', 'bg-secondary');
+    actualizarEtilla = document.getElementById('lbl-der');
+    if(actualizarEtilla) actualizarEtiqueta(actualizarEtilla, 'DETENIDO', 'bg-secondary');
     mostrarIndicadorDemo(false);
 }
 
