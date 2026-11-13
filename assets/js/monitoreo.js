@@ -1,22 +1,16 @@
-// ATENCIÓN: Usamos ngrok para evitar el error de Contenido Mixto (HTTPS -> HTTP) en GitHub Pages.
-// Si vas a probar en red local sin ngrok, cambia esto por '100.60.28.1:8000'
 const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev'; 
 let ws;
 
-// Indicadores DOM
 const badgeWSS = document.getElementById('badge-wss');
 const badgeAPI = document.getElementById('badge-api');
 const badgeRDS = document.getElementById('badge-rds');
 
-// Elementos Tarjeta Último Movimiento
 const movNombre = document.getElementById('mov-nombre');
 const movFecha = document.getElementById('mov-fecha');
 const movHora = document.getElementById('mov-hora');
 
-// Tabla
 const tablaHistorial = document.getElementById('tabla-historial-monitoreo');
 
-// Opciones de fetch (Bypassea advertencia de ngrok y pide JSON)
 const fetchOptions = {
     method: 'GET',
     headers: {
@@ -26,13 +20,11 @@ const fetchOptions = {
     }
 };
 
-// --- 1. CARGA INICIAL VÍA REST ---
 async function fetchUltimoEstado() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, fetchOptions);
         if (res.ok) {
             const data = await res.json();
-            // Validar que exista data y extraer de manera segura
             const estado = data.estado || data.data || data; 
             
             const nombreCmd = estado.comando || estado.nombre_comando || estado.nombre || 'DESCONOCIDO';
@@ -56,8 +48,6 @@ async function fetchHistorialMonitoreo() {
             badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
             badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: Disponible`;
             
-            // Regla profe: Si no hay diagnóstico explícito de DB, se marca "Sin verificar"
-            // Asumiremos que si regresa historial, RDS está vivo. (O cambias a "Sin verificar")
             badgeRDS.className = "badge bg-success p-2 fs-6 shadow-sm";
             badgeRDS.innerHTML = `<i class="fas fa-database me-1"></i>RDS: Disponible`;
 
@@ -66,13 +56,19 @@ async function fetchHistorialMonitoreo() {
             
             tablaHistorial.innerHTML = '';
 
-            if (registros.length === 0) {
-                tablaHistorial.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">Sin registros persistidos en RDS</td></tr>`;
+            // FILTRO ESTRICTO: Excluimos comandos internos de pausa o de origen demo de la tabla individual
+            const registrosLimpios = registros.filter(mov => {
+                const origen = (mov.origen || "").toLowerCase();
+                const cmd = (mov.comando || mov.nombre || "").toLowerCase();
+                return !origen.includes("demo") && !origen.includes("pausa") && !cmd.includes("apagar_todo");
+            });
+
+            if (registrosLimpios.length === 0) {
+                tablaHistorial.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">Sin registros individuales en RDS</td></tr>`;
                 return;
             }
 
-            // Regla profe: Renderiza máximo 10 filas
-            const ultimos10 = registros.slice(0, 10);
+            const ultimos10 = registrosLimpios.slice(0, 10);
             
             ultimos10.forEach((mov, index) => {
                 const nombreCmd = mov.comando || mov.nombre_comando || mov.nombre || `Cód: ${mov.id_comando || 'N/D'}`;
@@ -100,7 +96,6 @@ async function fetchHistorialMonitoreo() {
     }
 }
 
-// --- 2. WEBSOCKET PARA TIEMPO REAL ---
 function initMonitoreoWSS() {
     ws = new WebSocket(`wss://${HOST_IP}/ws/vehiculos/1`);
 
@@ -110,9 +105,6 @@ function initMonitoreoWSS() {
     };
 
     ws.onmessage = (event) => {
-        // Al recibir un evento, actualizamos de forma asíncrona mediante la API 
-        // para garantizar que la tabla solo muestre data verdaderamente confirmada por RDS.
-        // Esto automáticamente ignora secuencias de DEMO en la tabla si el backend no las guarda en /historial.
         setTimeout(() => {
             fetchUltimoEstado();
             fetchHistorialMonitoreo();
@@ -131,7 +123,6 @@ function initMonitoreoWSS() {
     };
 }
 
-// --- 3. INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', () => {
     fetchUltimoEstado();
     fetchHistorialMonitoreo();

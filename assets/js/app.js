@@ -58,21 +58,14 @@ function initWebSocket() {
             const data = JSON.parse(event.data);
             const eventoStr = (data.evento || "").toLowerCase();
             const origenStr = (data.origen || "").toLowerCase();
-            const mensajeStr = JSON.stringify(data).toLowerCase();
 
-            // 1. Detectar inicio de demo por evento o por origen
-            if (eventoStr.includes("inicio_demo") || origenStr.includes("demo")) {
+            // 1. Detectar inicio de demo
+            if (eventoStr.includes("inicio_demo") || eventoStr === "inicio_demo") {
                 mostrarIndicadorDemo(true);
             }
             
-            // 2. Detectar cualquier indicio de fin de demo en el mensaje del socket
-            if (
-                mensajeStr.includes("fin") || 
-                mensajeStr.includes("terminada") || 
-                mensajeStr.includes("completada") || 
-                mensajeStr.includes("cancel") || 
-                eventoStr.includes("fin_demo")
-            ) {
+            // 2. Apagar la etiqueta exactamente cuando el servidor emita el origen "Fin Demo"[cite: 5]
+            if (origenStr === "fin demo" || eventoStr.includes("fin_demo")) {
                 mostrarIndicadorDemo(false);
             }
         } catch (e) {
@@ -102,12 +95,11 @@ function mostrarIndicadorDemo(activo) {
         if (activo) {
             badge.classList.remove('d-none');
             
-            // TEMPORIZADOR INTELIGENTE: Apaga la etiqueta automáticamente a los 16 segundos 
-            // (tiempo exacto calculado para que cubra tus demos de 12-15s sin quedarse pegado).
+            // Seguridad: Apaga la etiqueta a los 25 segundos como respaldo máximo
             if (demoTimeout) clearTimeout(demoTimeout);
             demoTimeout = setTimeout(() => {
                 badge.classList.add('d-none');
-            }, 16000);
+            }, 25000);
 
         } else {
             badge.classList.add('d-none');
@@ -120,8 +112,8 @@ function forzarParo() {
     enviarComandoWS(13);
     enviarComandoREST(13); 
     actualizarEtiqueta(document.getElementById('lbl-izq'), 'DETENIDO', 'bg-secondary');
-    actualizarEtilla = document.getElementById('lbl-der');
-    if(actualizarEtilla) actualizarEtiqueta(actualizarEtilla, 'DETENIDO', 'bg-secondary');
+    const lblDer = document.getElementById('lbl-der');
+    if(lblDer) actualizarEtiqueta(lblDer, 'DETENIDO', 'bg-secondary');
     mostrarIndicadorDemo(false);
 }
 
