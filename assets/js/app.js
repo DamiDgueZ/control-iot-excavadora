@@ -1,6 +1,7 @@
 const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
 let sistemaEncendido = false;
 let ws;
+let demoTimeout = null; // Variable para controlar el temporizador de la demo
 
 const badgeWSS = document.getElementById('badge-wss');
 const badgeAPI = document.getElementById('badge-api');
@@ -56,22 +57,29 @@ function initWebSocket() {
         try {
             const data = JSON.parse(event.data);
             const eventoStr = (data.evento || "").toLowerCase();
-            const origenStr = data.origen || "";
-            const idCmd = parseInt(data.id_comando);
+            const origenStr = (data.origen || "").toLowerCase();
             const comandoStr = (data.comando || "").toUpperCase();
+            const idCmd = parseInt(data.id_comando);
 
-            if (eventoStr.includes("inicio_demo") || origenStr === "Demo Automática") {
+            // Detectar si la demo inicia
+            if (eventoStr.includes("inicio_demo") || origenStr.includes("demo")) {
                 mostrarIndicadorDemo(true);
-                
-                if (idCmd === 13 || comandoStr === "APAGAR_TODO") {
-                    setTimeout(() => {
-                        mostrarIndicadorDemo(false);
-                    }, 1000);
-                }
             }
             
-            if (eventoStr.includes("fin") || eventoStr.includes("cancel") || eventoStr.includes("completada")) {
-                mostrarIndicadorDemo(false);
+            // Detectar si la demo concluyó (ampliamos las palabras clave de cierre)
+            if (
+                eventoStr.includes("fin") || 
+                eventoStr.includes("cancel") || 
+                eventoStr.includes("completada") || 
+                eventoStr.includes("terminada") ||
+                eventoStr.includes("detenido") ||
+                comandoStr.includes("APAGAR") ||
+                idCmd === 13
+            ) {
+                // Pequeño retardo para asegurar que la UI alcance a reflejar el último paso
+                setTimeout(() => {
+                    mostrarIndicadorDemo(false);
+                }, 500);
             }
         } catch (e) {
             console.error("No se pudo parsear el mensaje WSS", e);
@@ -99,8 +107,17 @@ function mostrarIndicadorDemo(activo) {
     if (badge) {
         if (activo) {
             badge.classList.remove('d-none');
+            
+            // SEGURIDAD: Si por alguna razón el socket no avisa del fin, 
+            // apagamos el aviso automáticamente a los 15 segundos para evitar que se quede pegado.
+            if (demoTimeout) clearTimeout(demoTimeout);
+            demoTimeout = setTimeout(() => {
+                badge.classList.add('d-none');
+            }, 15000);
+
         } else {
             badge.classList.add('d-none');
+            if (demoTimeout) clearTimeout(demoTimeout);
         }
     }
 }
@@ -184,7 +201,6 @@ function toggleEncendido() {
     enviarComandoREST(5);
 }
 
-// Comprobación de salud basada en la respuesta del historial para encender RDS en verde de inmediato
 async function verificarSaludAPI() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, {
