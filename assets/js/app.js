@@ -140,7 +140,7 @@ async function enviarComandoREST(idComando) {
     }
 }
 
-// LECTURA DE ESTADO CON HORA AJUSTADA A LA ZONA HORARIA DE LA CIUDAD DE MÉXICO
+// LECTURA DE ESTADO CON CORRECCIÓN DE ZONA HORARIA UTC -> CDMX
 async function obtenerUltimoEstadoControl() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, {
@@ -158,13 +158,18 @@ async function obtenerUltimoEstadoControl() {
 
             if (objEstado && elemMov && elemTiempo) {
                 const nombreCmd = objEstado.comando || objEstado.nombre || 'SIN MOVIMIENTO';
-                const fechaRaw = objEstado.fecha_actualizacion || objEstado.fecha_hora || new Date().toISOString();
+                let fechaRaw = objEstado.fecha_actualizacion || objEstado.fecha_hora || new Date().toISOString();
                 
+                // Si la fecha del servidor no incluye 'Z' ni operador de zona horaria, se lo agregamos 
+                // para que JS sepa que está en UTC y aplique correctamente la conversión a CDMX.
+                if (typeof fechaRaw === 'string' && !fechaRaw.endsWith('Z') && !fechaRaw.includes('+') && !fechaRaw.includes('-', 10)) {
+                    fechaRaw += 'Z';
+                }
+
                 let horaFormateada = fechaRaw;
                 const dateObj = new Date(fechaRaw);
                 
                 if (!isNaN(dateObj.getTime())) {
-                    // Forzamos la zona horaria exacta de la CDMX
                     horaFormateada = dateObj.toLocaleTimeString('es-MX', {
                         timeZone: 'America/Mexico_City',
                         hour: '2-digit',
