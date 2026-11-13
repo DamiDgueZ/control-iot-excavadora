@@ -62,7 +62,7 @@ async function fetchUltimoEstado() {
     }
 }
 
-// HISTORIAL DE MONITOREO CON RELLENO GARANTIZADO DE 10 FILAS
+// HISTORIAL DE MONITOREO CON FILTRO Y SUFICIENTE MARGEN PARA LLENAR 10 FILAS REALES
 async function fetchHistorialMonitoreo() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, fetchOptions);
@@ -90,7 +90,7 @@ async function fetchHistorialMonitoreo() {
                 return;
             }
 
-            // Tomamos los primeros 10 disponibles
+            // Tomamos estrictamente los primeros 10 movimientos limpios
             const ultimos10 = registrosLimpios.slice(0, 10);
             
             ultimos10.forEach((mov, index) => {
@@ -127,7 +127,7 @@ async function fetchHistorialMonitoreo() {
                 tablaHistorial.appendChild(tr);
             });
 
-            // SI HAY MENOS DE 10 REGISTROS, RELLENAMOS CON FILAS VACÍAS PARA MANTENER LA ESTRUCTURA VISUAL
+            // Si después del filtro tenemos menos de 10, rellenamos con espacios visuales para la tabla
             const totalFilasActuales = ultimos10.length;
             if (totalFilasActuales < 10) {
                 for (let i = totalFilasActuales + 1; i <= 10; i++) {
