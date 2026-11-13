@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 
-<body class="p-0 overflow-hidden vh-100 d-flex flex-column">
+<body class="p-0 d-flex flex-column min-vh-100">
     <!-- Navbar / Navegación y Estado -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0" style="background: rgba(10,12,16,0.95) !important;">
         <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma IoT</span>
@@ -36,13 +36,13 @@
         </div>
     </nav>
 
-    <!-- Contenedor Principal Fijo -->
-    <div class="container-fluid max-w-1200 px-4 flex-grow-1 d-flex flex-column justify-content-center align-items-center my-2">
+    <!-- Contenedor Principal Adaptable -->
+    <div class="container-fluid max-w-1200 px-3 flex-grow-1 d-flex flex-column justify-content-center align-items-center my-3">
         <div class="row g-4 align-items-center justify-content-center w-100">
             
             <!-- Mando Estilo Gamepad -->
             <div class="col-lg-9 col-xl-8">
-                <div class="gamepad-container p-4 shadow-lg">
+                <div class="gamepad-container p-3 p-md-4 shadow-lg">
                     <div class="row align-items-center">
                         <!-- Joystick Tracción -->
                         <div class="col-md-5 text-center joystick-panel">
@@ -51,26 +51,23 @@
                             <div id="lbl-izq" class="mt-3 badge bg-secondary px-4 py-2 fs-6 shadow-sm rounded-pill">DETENIDO</div>
                         </div>
 
-                        <!-- Botones Centrales (Con animación toggle en Luz y Claxon) -->
+                        <!-- Botones Centrales -->
                         <div class="col-md-2 px-2 d-flex flex-column justify-content-center align-items-center my-3 my-md-0">
                             <button id="btn-encendido" class="btn btn-danger btn-lg btn-gamepad w-100 mb-2 py-3 shadow" onclick="toggleEncendido()" title="Sistema On/Off">
                                 <i class="fas fa-power-off fa-lg"></i>
                             </button>
                             
-                            <!-- Botón Luces con estilo Toggle -->
                             <button id="btn-luces" class="btn btn-outline-warning btn-gamepad w-100 mb-2 py-2" onclick="toggleLuces()" title="Luces">
                                 <i class="fas fa-lightbulb"></i>
                             </button>
                             
-                            <!-- Botón Claxon con estilo Toggle -->
                             <button id="btn-claxon" class="btn btn-outline-info btn-gamepad w-100 mb-2 py-2" onclick="toggleClaxon()" title="Claxon">
                                 <i class="fas fa-volume-up"></i>
                             </button>
                             
-                            <!-- Selector numérico de Demo -->
-                            <div class="input-group mb-2 w-100 shadow-sm">
+                            <div class="input-group mb-2 w-100 shadow-sm justify-content-center">
                                 <input type="number" class="form-control bg-dark text-light border-secondary text-center fw-bold" 
-                                       id="input-demo" min="1" value="1" placeholder="N°" style="font-size: 1rem; width: 40px; padding: 5px;">
+                                       id="input-demo" min="1" value="1" placeholder="N°" style="font-size: 1rem; max-width: 60px; padding: 5px;">
                                 <button class="btn btn-outline-secondary btn-gamepad text-light px-3" onclick="ejecutarDemoSeleccionada()" title="Iniciar Demo">
                                     <i class="fas fa-play"></i>
                                 </button>
@@ -88,18 +85,18 @@
                     <!-- Botón de Paro de Emergencia -->
                     <div class="row mt-3">
                         <div class="col-12 text-center">
-                            <button class="btn btn-danger btn-lg w-75 py-2 fw-bold text-uppercase shadow-lg rounded-pill" style="border: 2px solid rgba(255,255,255,0.2); background: linear-gradient(135deg, #dc3545, #a71d2a);" onclick="forzarParo()">
+                            <button class="btn btn-danger btn-lg w-100 w-md-75 py-2 fw-bold text-uppercase shadow-lg rounded-pill" style="border: 2px solid rgba(255,255,255,0.2); background: linear-gradient(135deg, #dc3545, #a71d2a);" onclick="forzarParo()">
                                 <i class="fas fa-hand-paper me-2"></i>DETENER TODO (PARO DE EMERGENCIA)
                             </button>
                         </div>
                     </div>
 
-                    <!-- NUEVO: Indicador miniatura de Último Movimiento debajo del control -->
+                    <!-- Indicador miniatura de Último Movimiento -->
                     <div class="row mt-3">
                         <div class="col-12">
-                            <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary text-center shadow-inner d-flex justify-content-between align-items-center px-4">
-                                <span class="text-secondary small text-uppercase"><i class="fas fa-info-circle me-1 text-info"></i>Último Estado:</span>
-                                <span id="ctrl-ultimo-mov" class="fw-bold text-info font-monospace">ESPERANDO...</span>
+                            <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary text-center shadow-inner d-flex flex-column flex-md-row justify-content-between align-items-center px-3">
+                                <span class="text-secondary small text-uppercase mb-1 mb-md-0"><i class="fas fa-info-circle me-1 text-info"></i>Último Estado:</span>
+                                <span id="ctrl-ultimo-mov" class="fw-bold text-info font-monospace mb-1 mb-md-0">ESPERANDO...</span>
                                 <span id="ctrl-ultimo-tiempo" class="text-muted small">--:--:--</span>
                             </div>
                         </div>

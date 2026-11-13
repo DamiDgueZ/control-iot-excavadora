@@ -6,15 +6,14 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-}
-
-/* Pantallas grandes (Laptops / Escritorio): Estático y sin scroll */
-html, body {
-    width: 100%;
-    height: 100vh;
-    overflow: hidden !important;
     margin: 0;
     padding: 0;
+}
+
+/* Pantallas grandes (Laptops / Escritorio) */
+html {
+    width: 100%;
+    height: 100%;
 }
 
 .gamepad-container {
@@ -43,6 +42,7 @@ html, body {
     margin: 0 auto;
     border: 3px solid rgba(255, 255, 255, 0.07);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(0, 0, 0, 0.8);
+    touch-action: none; /* Vital para que los joysticks respondan perfecto al tacto en móviles */
 }
 
 .btn-gamepad {
@@ -80,16 +80,6 @@ html, body {
     border-radius: 10px;
 }
 
-.historial-item {
-    font-size: 0.85em;
-    border-left: 4px solid #0d6efd;
-    background: rgba(0, 0, 0, 0.4);
-    margin-bottom: 8px;
-    padding: 10px;
-    border-radius: 0 10px 10px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.03);
-}
-
 footer {
     margin-top: auto;
     background: rgba(0, 0, 0, 0.95);
@@ -97,10 +87,9 @@ footer {
 }
 
 /* ==========================================================
-   ADATABILIDAD Y SCROLL INTELIGENTE PARA DISPOSITIVOS MÓVILES
+   ADAPTABILIDAD TOTAL PARA DISPOSITIVOS MÓVILES Y TABLETS
    ========================================================== */
 @media (max-width: 991.98px) {
-    /* Desbloquea por completo el scroll vertical y ajusta el alto en celular */
     html, body {
         height: auto !important;
         min-height: 100vh !important;
@@ -108,38 +97,26 @@ footer {
         overflow-x: hidden !important;
     }
 
-    /* Anula clases rígidas de Bootstrap para que fluya el contenido */
-    .vh-100, [class*="vh-"] {
-        height: auto !important;
-        min-height: auto !important;
-    }
-
-    .container, .container-fluid {
-        height: auto !important;
-        min-height: auto !important;
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        max-width: 100% !important;
-        flex: none !important;
-    }
-    
-    /* Adapta la tarjeta del control al ancho del celular con espacio para deslizar */
     .gamepad-container {
         width: 100% !important;
         max-width: 100% !important;
         height: auto !important;
-        margin: 15px auto 40px auto !important;
+        margin: 10px auto 30px auto !important;
         border-radius: 20px !important;
-        padding: 15px !important;
+        padding: 12px !important;
     }
 
-    /* Reduce un poco el joystick para evitar desbordamientos */
+    /* Reducimos ligeramente los joysticks para que quepan cómodamente en pantallas de celular vertical */
     .joystick-zone {
-        height: 180px !important;
-        width: 180px !important;
+        height: 170px !important;
+        width: 170px !important;
     }
 
-    /* Evita que elementos internos fuercen desbordes horizontales */
+    .joystick-panel {
+        padding: 12px !important;
+        margin-bottom: 10px !important;
+    }
+
     body * {
         max-width: 100%;
     }

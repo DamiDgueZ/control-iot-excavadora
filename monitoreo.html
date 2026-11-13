@@ -10,13 +10,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
     <style>
-        html, body {
-            width: 100%;
-            height: 100vh;
-            overflow: hidden !important;
-            margin: 0;
-            padding: 0;
-        }
         .card-ultimo-mov {
             background: linear-gradient(135deg, rgba(13, 110, 253, 0.25), rgba(10, 12, 16, 0.85));
             border: 1px solid rgba(13, 110, 253, 0.4);
@@ -41,7 +34,7 @@
     </style>
 </head>
 
-<body class="p-0 d-flex flex-column vh-100">
+<body class="p-0 d-flex flex-column min-vh-100">
     <!-- Navbar / Navegación y Estado -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0" style="background: rgba(10,12,16,0.95) !important;">
         <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma IoT</span>
@@ -63,16 +56,16 @@
     </nav>
 
     <!-- Contenedor Principal de Monitoreo -->
-    <div class="container max-w-1200 px-4 flex-grow-1 d-flex flex-column justify-content-center my-2">
+    <div class="container px-3 flex-grow-1 d-flex flex-column justify-content-center my-3">
         
-        <!-- Tarjeta: Último Movimiento (Grande) -->
+        <!-- Tarjeta: Último Movimiento -->
         <div class="row mb-3">
             <div class="col-12">
-                <div class="card-ultimo-mov p-4 shadow-lg">
-                    <h6 class="text-info text-uppercase mb-1 fw-bold"><i class="fas fa-satellite-dish me-2"></i>Último estado reportado en tiempo real</h6>
+                <div class="card-ultimo-mov p-3 p-md-4 shadow-lg">
+                    <h6 class="text-info text-uppercase mb-1 fw-bold" style="font-size: 0.85rem;"><i class="fas fa-satellite-dish me-2"></i>Último estado reportado en tiempo real</h6>
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                         <div>
-                            <h1 id="mov-nombre" class="display-6 fw-bold text-warning m-0 font-monospace">ESPERANDO DATOS...</h1>
+                            <h1 id="mov-nombre" class="fs-3 fs-md-2 fw-bold text-warning m-0 font-monospace">ESPERANDO DATOS...</h1>
                             <span id="mov-vehiculo" class="text-secondary small">Vehículo ID: 1 · Excavadora IoT</span>
                         </div>
                         <div class="text-md-end mt-2 mt-md-0">
@@ -84,19 +77,19 @@
             </div>
         </div>
 
-        <!-- Tabla: Últimos Movimientos -->
+        <!-- Tabla: Historial de Movimientos -->
         <div class="row mb-2">
             <div class="col-12">
                 <div class="table-glass shadow-lg p-3 border border-secondary">
-                    <h5 class="mb-3 text-warning fw-bold"><i class="fas fa-list-ol me-2"></i>Historial de Movimientos Individuales (AWS RDS)</h5>
+                    <h5 class="mb-3 text-warning fw-bold fs-6 fs-md-5"><i class="fas fa-list-ol me-2"></i>Historial de Movimientos (AWS RDS)</h5>
                     <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
                         <table class="table table-dark-custom table-hover align-middle mb-0">
-                            <thead class="text-info text-uppercase fs-7 sticky-top bg-dark">
+                            <thead class="text-info text-uppercase fs-7 sticky-top bg-dark" style="z-index: 1;">
                                 <tr>
                                     <th scope="col" width="10%">#</th>
                                     <th scope="col" width="40%">Movimiento / Comando</th>
-                                    <th scope="col" width="25%">Fecha (CDMX)</th>
-                                    <th scope="col" width="25%">Hora (CDMX)</th>
+                                    <th scope="col" width="25%">Fecha</th>
+                                    <th scope="col" width="25%">Hora</th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-historial-monitoreo">
