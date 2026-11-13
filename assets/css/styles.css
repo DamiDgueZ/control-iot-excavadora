@@ -17,17 +17,27 @@ html, body {
     padding: 0;
 }
 
-/* Dispositivos móviles y tablets (Pantallas menores a 992px): Se libera el scroll y se ajusta el diseño */
+/* Dispositivos móviles y tablets (Pantallas menores a 992px): Se libera el scroll y se adapta el contenedor */
 @media (max-width: 991.98px) {
     html, body {
         height: auto !important;
         overflow: auto !important;
     }
     
-    /* Permitir que el contenedor principal crezca de manera natural en celular */
+    /* El contenedor principal ocupa el ancho de la pantalla con un pequeño margen seguro */
     .gamepad-container {
+        width: 100% !important;
+        max-width: 100% !important;
         height: auto !important;
-        margin-bottom: 30px;
+        margin: 10px auto 30px auto !important;
+        border-radius: 20px !important;
+        padding: 10px !important;
+    }
+
+    /* Reducir ligeramente el joystick en celulares para que no desborde */
+    .joystick-zone {
+        height: 180px !important;
+        width: 180px !important;
     }
 }
 
