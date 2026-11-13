@@ -119,3 +119,17 @@ footer {
     background: rgba(0, 0, 0, 0.95);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+/* Forzar adaptabilidad absoluta en celulares */
+@media (max-width: 991.98px) {
+    .container, .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        max-width: 100% !important;
+    }
+    
+    /* Evitar que cualquier elemento interno desborde la pantalla */
+    body * {
+        max-width: 100%;
+    }
+}
