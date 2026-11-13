@@ -1,11 +1,15 @@
 const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
 let sistemaEncendido = false;
+let estadoLuces = false;   // Estado lógico para animación de luces
+let estadoClaxon = false;  // Estado lógico para animación de claxon
 let ws;
 let demoTimeout = null; 
 
 const badgeWSS = document.getElementById('badge-wss');
 const badgeAPI = document.getElementById('badge-api');
 const badgeRDS = document.getElementById('badge-rds');
+const ctrlUltimoMov = document.getElementById('ctrl-ultimo-mov');
+const ctrlUltimoTiempo = document.getElementById('ctrl-ultimo-tiempo');
 
 function actualizarEtiqueta(elemento, texto, claseColor) {
     elemento.textContent = texto;
@@ -21,7 +25,7 @@ function initJoysticks() {
         mode: 'static',
         position: { left: '50%', top: '50%' },
         color: '#0dcaf0',
-        size: 130
+        size: 110
     });
 
     joyIzq.on('dir:up', () => { enviarComandoWS(2); actualizarEtiqueta(lblIzq, '↑ ADELANTE', 'bg-info text-dark'); });
@@ -35,7 +39,7 @@ function initJoysticks() {
         mode: 'static',
         position: { left: '50%', top: '50%' },
         color: '#ffc107',
-        size: 130
+        size: 110
     });
 
     joyDer.on('dir:up', () => { enviarComandoWS(9); actualizarEtiqueta(lblDer, '↑ SUBIR BRAZO', 'bg-warning text-dark'); });
@@ -59,12 +63,13 @@ function initWebSocket() {
             const eventoStr = (data.evento || "").toLowerCase();
             const origenStr = (data.origen || "").toLowerCase();
 
-            // 1. Detectar inicio de demo
+            // Consultar último estado de inmediato para actualizar el indicador inferior
+            obtenerUltimoEstadoControl();
+
             if (eventoStr.includes("inicio_demo") || eventoStr === "inicio_demo") {
                 mostrarIndicadorDemo(true);
             }
             
-            // 2. Apagar la etiqueta exactamente cuando el servidor emita el origen "Fin Demo"[cite: 5]
             if (origenStr === "fin demo" || eventoStr.includes("fin_demo")) {
                 mostrarIndicadorDemo(false);
             }
@@ -94,13 +99,10 @@ function mostrarIndicadorDemo(activo) {
     if (badge) {
         if (activo) {
             badge.classList.remove('d-none');
-            
-            // Seguridad: Apaga la etiqueta a los 25 segundos como respaldo máximo
             if (demoTimeout) clearTimeout(demoTimeout);
             demoTimeout = setTimeout(() => {
                 badge.classList.add('d-none');
             }, 25000);
-
         } else {
             badge.classList.add('d-none');
             if (demoTimeout) clearTimeout(demoTimeout);
@@ -133,18 +135,70 @@ async function enviarComandoREST(idComando) {
         if(res.ok) {
             badgeAPI.className = "badge bg-success p-2 fs-6 shadow-sm";
             badgeAPI.innerHTML = `<i class="fas fa-server me-1"></i>API: OK`;
+            obtenerUltimoEstadoControl();
         }
     } catch (error) {
         console.error("Error REST:", error);
     }
 }
 
+// NUEVO: Obtiene el último movimiento para pintarlo en el mini indicador inferior
+async function obtenerUltimoEstadoControl() {
+    try {
+        const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const estado = data.estado || data.data || data;
+            const nombreCmd = estado.comando || estado.nombre_comando || estado.nombre || 'ESPERANDO';
+            const fechaRaw = estado.fecha_hora || estado.fecha || estado.timestamp || new Date().toISOString();
+            const dateObj = new Date(fechaRaw);
+
+            ctrlUltimoMov.textContent = nombreCmd;
+            ctrlUltimoTiempo.textContent = dateObj.toLocaleTimeString('es-MX');
+        }
+    } catch (e) {
+        console.error("Error al refrescar estado en control:", e);
+    }
+}
+
+// ANIMACIÓN TOGGLE PARA LUCES
+function toggleLuces() {
+    estadoLuces = !estadoLuces;
+    const btnLuces = document.getElementById('btn-luces');
+    if (estadoLuces) {
+        btnLuces.classList.replace('btn-outline-warning', 'btn-warning');
+        btnLuces.style.background = "#ffc107";
+        btnLuces.style.color = "#000";
+    } else {
+        btnLuces.classList.replace('btn-warning', 'btn-outline-warning');
+        btnLuces.style.background = "transparent";
+        btnLuces.style.color = "#ffc107";
+    }
+    enviarComandoREST(7);
+}
+
+// ANIMACIÓN TOGGLE PARA CLAXON
+function toggleClaxon() {
+    estadoClaxon = !estadoClaxon;
+    const btnClaxon = document.getElementById('btn-claxon');
+    if (estadoClaxon) {
+        btnClaxon.classList.replace('btn-outline-info', 'btn-info');
+        btnClaxon.style.background = "#0dcaf0";
+        btnClaxon.style.color = "#000";
+    } else {
+        btnClaxon.classList.replace('btn-info', 'btn-outline-info');
+        btnClaxon.style.background = "transparent";
+        btnClaxon.style.color = "#0dcaf0";
+    }
+    enviarComandoREST(8);
+}
+
 function ejecutarDemoSeleccionada() {
     const input = document.getElementById('input-demo');
-    if (!input) {
-        console.error("No se encontró el elemento input-demo");
-        return;
-    }
+    if (!input) return;
     const idDemo = parseInt(input.value);
     
     if (!isNaN(idDemo) && idDemo > 0) {
@@ -210,4 +264,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initJoysticks();
     initWebSocket();
     verificarSaludAPI();
+    obtenerUltimoEstadoControl();
 });
