@@ -133,3 +133,21 @@ footer {
         max-width: 100%;
     }
 }
+
+/* FORZAR SCROLL Y ADAPTABILIDAD EN DISPOSITIVOS MÓVILES */
+@media (max-width: 991.98px) {
+    html, body {
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow-y: auto !important; /* Desbloquea por completo el scroll vertical en el celular */
+        overflow-x: hidden !important; /* Evita que se mueva de lado a lado feo */
+    }
+
+    .gamepad-container {
+        width: 95% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        margin: 20px auto !important;
+        padding: 15px !important;
+    }
+}
