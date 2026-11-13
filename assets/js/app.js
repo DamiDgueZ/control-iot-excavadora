@@ -140,7 +140,7 @@ async function enviarComandoREST(idComando) {
     }
 }
 
-// FUNCIÓN BLINDADA PARA LEER EL ARREGLO DE SWAGGER CORRECTAMENTE
+// LECTURA DE ESTADO CON HORA AJUSTADA A LA ZONA HORARIA DE LA CIUDAD DE MÉXICO
 async function obtenerUltimoEstadoControl() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/estado`, {
@@ -149,9 +149,7 @@ async function obtenerUltimoEstadoControl() {
         });
         if (res.ok) {
             const data = await res.json();
-            console.log("Respuesta estado API:", data); // Para verificar en consola F12
-
-            // Extraemos con seguridad el objeto dentro del arreglo 'estado' (visto en Swagger)[cite: 5]
+            
             const listaEstados = data.estado || data.data || [];
             const objEstado = Array.isArray(listaEstados) ? listaEstados[0] : listaEstados;
 
@@ -164,8 +162,16 @@ async function obtenerUltimoEstadoControl() {
                 
                 let horaFormateada = fechaRaw;
                 const dateObj = new Date(fechaRaw);
+                
                 if (!isNaN(dateObj.getTime())) {
-                    horaFormateada = dateObj.toLocaleTimeString('es-MX');
+                    // Forzamos la zona horaria exacta de la CDMX
+                    horaFormateada = dateObj.toLocaleTimeString('es-MX', {
+                        timeZone: 'America/Mexico_City',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
                 }
 
                 elemMov.textContent = nombreCmd;
@@ -177,7 +183,7 @@ async function obtenerUltimoEstadoControl() {
     }
 }
 
-// TUS BOTONES DE LUCES Y CLAXON (QUE YA FUNCIONAN PERFECTO)
+// TUS BOTONES DE LUCES Y CLAXON (INTACTOS Y FUNCIONANDO)
 function toggleLuces() {
     estadoLuces = !estadoLuces;
     const btnLuces = document.getElementById('btn-luces');
