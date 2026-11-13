@@ -10,12 +10,18 @@ body {
     padding: 0;
 }
 
-/* Pantallas grandes (Laptops / Escritorio) */
-html {
-    width: 100%;
-    height: 100%;
+/* ==========================================================
+   PANTALLAS GRANDES (LAPTOPS / ESCRITORIO): ESTÁTICO Y SIN SCROLL
+   ========================================================== */
+@media (min-width: 992px) {
+    html, body {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden !important;
+    }
 }
 
+/* Estilos generales de los contenedores del gamepad */
 .gamepad-container {
     background: linear-gradient(135deg, rgba(20, 24, 33, 0.95), rgba(10, 12, 16, 0.95));
     backdrop-filter: blur(15px);
@@ -42,7 +48,7 @@ html {
     margin: 0 auto;
     border: 3px solid rgba(255, 255, 255, 0.07);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(0, 0, 0, 0.8);
-    touch-action: none; /* Vital para que los joysticks respondan perfecto al tacto en móviles */
+    touch-action: none; /* Vital para que nipplejs agarre el tacto en celulares sin mover la pág */
 }
 
 .btn-gamepad {
@@ -66,20 +72,6 @@ html {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-#historial-list {
-    max-height: 380px;
-    overflow-y: auto;
-}
-
-#historial-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-#historial-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
 footer {
     margin-top: auto;
     background: rgba(0, 0, 0, 0.95);
@@ -87,7 +79,7 @@ footer {
 }
 
 /* ==========================================================
-   ADAPTABILIDAD TOTAL PARA DISPOSITIVOS MÓVILES Y TABLETS
+   DISPOSITIVOS MÓVILES (CELULARES): PERMITE DESPLAZAMIENTO LIBRE
    ========================================================== */
 @media (max-width: 991.98px) {
     html, body {
@@ -106,7 +98,6 @@ footer {
         padding: 12px !important;
     }
 
-    /* Reducimos ligeramente los joysticks para que quepan cómodamente en pantallas de celular vertical */
     .joystick-zone {
         height: 170px !important;
         width: 170px !important;
