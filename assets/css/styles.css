@@ -12,16 +12,22 @@ body {
 html, body {
     width: 100%;
     height: 100vh;
-    overflow: hidden !important; /* Bloquea cualquier scroll vertical u horizontal en PC */
+    overflow: hidden !important;
     margin: 0;
     padding: 0;
 }
 
-/* Dispositivos móviles y tablets (Pantallas menores a 992px): Se libera el scroll natural */
+/* Dispositivos móviles y tablets (Pantallas menores a 992px): Se libera el scroll y se ajusta el diseño */
 @media (max-width: 991.98px) {
     html, body {
         height: auto !important;
         overflow: auto !important;
+    }
+    
+    /* Permitir que el contenedor principal crezca de manera natural en celular */
+    .gamepad-container {
+        height: auto !important;
+        margin-bottom: 30px;
     }
 }
 
