@@ -62,7 +62,7 @@ async function fetchUltimoEstado() {
     }
 }
 
-// HISTORIAL DE MONITOREO CON FILTRO Y SUFICIENTE MARGEN PARA LLENAR 10 FILAS REALES
+// HISTORIAL DE MONITOREO CON FILTRO Y NUMERACIÓN LIMPIA DEL 1 AL 10
 async function fetchHistorialMonitoreo() {
     try {
         const res = await fetch(`https://${HOST_IP}/vehiculos/1/historial`, fetchOptions);
@@ -90,56 +90,55 @@ async function fetchHistorialMonitoreo() {
                 return;
             }
 
-            // Tomamos estrictamente los primeros 10 movimientos limpios
+            // Tomamos estrictamente los primeros 10 elementos del arreglo filtrado
             const ultimos10 = registrosLimpios.slice(0, 10);
             
-            ultimos10.forEach((mov, index) => {
-                const nombreCmd = mov.comando || mov.nombre_comando || mov.nombre || `Cód: ${mov.id_comando || 'N/D'}`;
-                let fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
-                
-                if (typeof fechaRaw === 'string' && !fechaRaw.endsWith('Z') && !fechaRaw.includes('+') && !fechaRaw.includes('-', 10)) {
-                    fechaRaw += 'Z';
-                }
-
-                const dateObj = fechaRaw ? new Date(fechaRaw) : new Date();
-                
-                let fechaStr = "--/--/----";
-                let horaStr = "--:--:--";
-
-                if (!isNaN(dateObj.getTime())) {
-                    fechaStr = dateObj.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City' });
-                    horaStr = dateObj.toLocaleTimeString('es-MX', {
-                        timeZone: 'America/Mexico_City',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true
-                    });
-                }
-
+            // Creamos exactamente 10 filas siempre para mantener la estructura simétrica
+            for (let i = 0; i < 10; i++) {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <th scope="row" class="text-secondary">${index + 1}</th>
-                    <td class="fw-bold text-light">${nombreCmd}</td>
-                    <td>${fechaStr}</td>
-                    <td>${horaStr}</td>
-                `;
-                tablaHistorial.appendChild(tr);
-            });
+                const numeroFila = i + 1;
 
-            // Si después del filtro tenemos menos de 10, rellenamos con espacios visuales para la tabla
-            const totalFilasActuales = ultimos10.length;
-            if (totalFilasActuales < 10) {
-                for (let i = totalFilasActuales + 1; i <= 10; i++) {
-                    const trVacio = document.createElement('tr');
-                    trVacio.innerHTML = `
-                        <th scope="row" class="text-muted opacity-50">${i}</th>
+                if (i < ultimos10.length) {
+                    // Fila con datos reales
+                    const mov = ultimos10[i];
+                    const nombreCmd = mov.comando || mov.nombre_comando || mov.nombre || `Cód: ${mov.id_comando || 'N/D'}`;
+                    let fechaRaw = mov.fecha_hora || mov.fecha || mov.timestamp || mov.created_at;
+                    
+                    if (typeof fechaRaw === 'string' && !fechaRaw.endsWith('Z') && !fechaRaw.includes('+') && !fechaRaw.includes('-', 10)) {
+                        fechaRaw += 'Z';
+                    }
+
+                    const dateObj = fechaRaw ? new Date(fechaRaw) : new Date();
+                    let fechaStr = "--/--/----";
+                    let horaStr = "--:--:--";
+
+                    if (!isNaN(dateObj.getTime())) {
+                        fechaStr = dateObj.toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City' });
+                        horaStr = dateObj.toLocaleTimeString('es-MX', {
+                            timeZone: 'America/Mexico_City',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: true
+                        });
+                    }
+
+                    tr.innerHTML = `
+                        <th scope="row" class="text-secondary">${numeroFila}</th>
+                        <td class="fw-bold text-light">${nombreCmd}</td>
+                        <td>${fechaStr}</td>
+                        <td>${horaStr}</td>
+                    `;
+                } else {
+                    // Fila de relleno vacía para completar las 10 filas visuales
+                    tr.innerHTML = `
+                        <th scope="row" class="text-muted opacity-50">${numeroFila}</th>
                         <td class="text-muted opacity-50 fst-italic">---</td>
                         <td class="text-muted opacity-50">--/--/----</td>
                         <td class="text-muted opacity-50">--:--:--</td>
                     `;
-                    tablaHistorial.appendChild(trVacio);
                 }
+                tablaHistorial.appendChild(tr);
             }
 
         } else {
