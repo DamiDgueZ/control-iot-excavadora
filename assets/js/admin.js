@@ -3,6 +3,7 @@ const API_BASE_URL = `https://${HOST_IP}`;
 const VEHICULO_ID = 1;
 
 document.addEventListener("DOMContentLoaded", function () {
+    console.log("Panel administrativo inicializado correctamente.");
     cargarDemos();
 });
 
@@ -40,13 +41,15 @@ async function cargarDemos() {
                 <td class="fw-bold text-warning">${idDemo}</td>
                 <td>${nombreDemo}</td>
                 <td class="text-muted small">${demo.fecha_creacion || demo.fecha || "Reciente"}</td>
-                <td class="text-center d-flex justify-content-center gap-2">
-                    <button class="btn btn-sm btn-outline-info px-3 shadow-sm" onclick="abrirModalMovimientos(${idDemo}, '${nombreDemo}')">
-                        <i class="fas fa-list-ol me-1"></i> Movimientos
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger px-3 shadow-sm" onclick="eliminarDemo(${idDemo})">
-                        <i class="fas fa-trash-alt me-1"></i> Eliminar
-                    </button>
+                <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-sm btn-outline-info px-3 shadow-sm" onclick="abrirModalMovimientos(${idDemo}, '${nombreDemo}')">
+                            <i class="fas fa-list-ol me-1"></i> Movimientos
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger px-3 shadow-sm" onclick="eliminarDemo(${idDemo})">
+                            <i class="fas fa-trash-alt me-1"></i> Eliminar
+                        </button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -81,7 +84,10 @@ async function crearDemo() {
         if (!response.ok) throw new Error("No se pudo crear la demo");
 
         inputNombre.value = "";
-        bootstrap.Modal.getInstance(document.getElementById("modalNuevaDemo")).hide();
+        const modalEl = document.getElementById("modalNuevaDemo");
+        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modalInstance.hide();
+        
         cargarDemos();
     } catch (error) {
         console.error("Error al crear la demo:", error);
@@ -109,13 +115,12 @@ async function eliminarDemo(idDemo) {
 
 // --- GESTIÓN DE MOVIMIENTOS DE LA DEMO ---
 
-// 4. Abrir modal y cargar los movimientos asociados a esa Demo
 async function abrirModalMovimientos(idDemo, nombreDemo) {
     document.getElementById("modal-id-demo-activo").value = idDemo;
     document.getElementById("demo-titulo-modal").textContent = `${nombreDemo} (ID: ${idDemo})`;
     
-    // Mostrar modal
-    const modal = new bootstrap.Modal(document.getElementById("modalMovimientosDemo"));
+    const modalEl = document.getElementById("modalMovimientosDemo");
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.show();
 
     await cargarMovimientosDemo(idDemo);
@@ -165,7 +170,6 @@ async function cargarMovimientosDemo(idDemo) {
     }
 }
 
-// 5. Agregar un nuevo movimiento/paso a la demo
 async function agregarMovimientoDemo() {
     const idDemo = document.getElementById("modal-id-demo-activo").value;
     const idComando = parseInt(document.getElementById("select-comando").value);
@@ -188,18 +192,16 @@ async function agregarMovimientoDemo() {
                 id_comando: idComando,
                 orden: orden,
                 duracion_ms: duracionMs,
-                pausa_ms: 500 // Pausa estándar por defecto
+                pausa_ms: 500
             })
         });
 
         if (!response.ok) throw new Error("No se pudo agregar el movimiento");
 
-        // Limpiar inputs del formulario de pasos
         document.getElementById("select-comando").value = "";
         document.getElementById("input-orden").value = "";
         document.getElementById("input-duracion").value = "";
 
-        // Recargar la tabla del modal
         await cargarMovimientosDemo(idDemo);
     } catch (error) {
         console.error("Error al agregar movimiento:", error);
@@ -207,7 +209,6 @@ async function agregarMovimientoDemo() {
     }
 }
 
-// 6. Eliminar un movimiento individual de la demo
 async function eliminarMovimientoDemo(idMovimiento, idDemo) {
     if (!confirm("¿Estás segura de eliminar este paso de la rutina?")) return;
 
