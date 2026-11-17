@@ -1,6 +1,6 @@
-// Usamos exactamente el mismo enfoque de tus vistas funcionales de Control y Monitoreo
-// (Si tus otros archivos leen la URL de config.js, aquí aseguramos la ruta correcta)
-const API_BASE_URL = typeof CONFIG !== 'undefined' && CONFIG.API_URL ? CONFIG.API_URL : "https://ultra-silver-unblessed.ngrok-free.dev";
+// Usamos exactamente el mismo host y cabeceras que ya te funcionan en app.js
+const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
+const API_BASE_URL = `https://${HOST_IP}`;
 const VEHICULO_ID = 1;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -11,11 +11,19 @@ document.addEventListener("DOMContentLoaded", function () {
 async function cargarDemos() {
     const tbody = document.getElementById("tabla-demos-admin");
     try {
-        const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`);
+        const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            }
+        });
+        
         if (!response.ok) throw new Error("Error al obtener las rutinas DEMO");
         
         const data = await response.json();
-        // Extracción segura soportando tanto si devuelve un arreglo directo como un objeto con la propiedad 'demos'
+        // Extracción segura soportando tu estructura de FastAPI {"vehiculo_id": 1, "demos": [...]}
         const demos = Array.isArray(data) ? data : (data.demos || []);
         
         tbody.innerHTML = "";
@@ -42,7 +50,7 @@ async function cargarDemos() {
 
     } catch (error) {
         console.error("Error conectando con la API:", error);
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error de conexión con el servidor. Revisa la consola (F12).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error de conexión con el servidor. Revisa ngrok.</td></tr>`;
     }
 }
 
@@ -60,7 +68,8 @@ async function crearDemo() {
         const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true"
             },
             body: JSON.stringify({ nombre: nombre, descripcion: "Creado desde panel admin" })
         });
@@ -87,7 +96,10 @@ async function eliminarDemo(idDemo) {
 
     try {
         const response = await fetch(`${API_BASE_URL}/demos/${idDemo}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers: {
+                "ngrok-skip-browser-warning": "true"
+            }
         });
 
         if (!response.ok) throw new Error("No se pudo eliminar la demo");
