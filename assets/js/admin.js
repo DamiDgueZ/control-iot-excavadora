@@ -1,5 +1,6 @@
-// Usamos tu URL de ngrok para que funcione correctamente desde GitHub Pages
-const API_BASE_URL = "https://ultra-silver-unblessed.ngrok-free.dev";
+// Usamos exactamente el mismo enfoque de tus vistas funcionales de Control y Monitoreo
+// (Si tus otros archivos leen la URL de config.js, aquí aseguramos la ruta correcta)
+const API_BASE_URL = typeof CONFIG !== 'undefined' && CONFIG.API_URL ? CONFIG.API_URL : "https://ultra-silver-unblessed.ngrok-free.dev";
 const VEHICULO_ID = 1;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -14,8 +15,8 @@ async function cargarDemos() {
         if (!response.ok) throw new Error("Error al obtener las rutinas DEMO");
         
         const data = await response.json();
-        // Como main.py devuelve {"vehiculo_id": 1, "demos": [...]}, extraemos el arreglo de data.demos
-        const demos = data.demos || [];
+        // Extracción segura soportando tanto si devuelve un arreglo directo como un objeto con la propiedad 'demos'
+        const demos = Array.isArray(data) ? data : (data.demos || []);
         
         tbody.innerHTML = "";
 
@@ -41,7 +42,7 @@ async function cargarDemos() {
 
     } catch (error) {
         console.error("Error conectando con la API:", error);
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error de conexión con el servidor (Verifica que ngrok esté activo).</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error de conexión con el servidor. Revisa la consola (F12).</td></tr>`;
     }
 }
 
