@@ -1,17 +1,19 @@
-// Usamos exactamente el mismo host y cabeceras que ya te funcionan en app.js
 const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
 const API_BASE_URL = `https://${HOST_IP}`;
 const VEHICULO_ID = 1;
 
 document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM cargado en Administración. Iniciando petición de demos...");
     cargarDemos();
 });
 
-// Función para obtener y listar las demos del vehículo 1
 async function cargarDemos() {
     const tbody = document.getElementById("tabla-demos-admin");
     try {
-        const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
+        const urlPeticion = `${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`;
+        console.log("Haciendo fetch a:", urlPeticion);
+
+        const response = await fetch(urlPeticion, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -20,10 +22,12 @@ async function cargarDemos() {
             }
         });
         
-        if (!response.ok) throw new Error("Error al obtener las rutinas DEMO");
+        console.log("Respuesta recibida, status:", response.status);
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
         
         const data = await response.json();
-        // Extracción segura soportando tu estructura de FastAPI {"vehiculo_id": 1, "demos": [...]}
+        console.log("Datos JSON obtenidos:", data);
+
         const demos = Array.isArray(data) ? data : (data.demos || []);
         
         tbody.innerHTML = "";
@@ -49,12 +53,11 @@ async function cargarDemos() {
         });
 
     } catch (error) {
-        console.error("Error conectando con la API:", error);
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error de conexión con el servidor. Revisa ngrok.</td></tr>`;
+        console.error("Error detallado en catch:", error);
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error: ${error.message}. Revisa la consola (F12).</td></tr>`;
     }
 }
 
-// Función para crear una nueva demo vía POST
 async function crearDemo() {
     const inputNombre = document.getElementById("nombre-demo");
     const nombre = inputNombre.value.trim();
@@ -76,13 +79,11 @@ async function crearDemo() {
 
         if (!response.ok) throw new Error("No se pudo crear la demo");
 
-        // Limpiar formulario y cerrar modal
         inputNombre.value = "";
         const modalElement = document.getElementById("modalNuevaDemo");
         const modalInstance = bootstrap.Modal.getInstance(modalElement);
         modalInstance.hide();
 
-        // Recargar tabla
         cargarDemos();
     } catch (error) {
         console.error("Error al crear la demo:", error);
@@ -90,7 +91,6 @@ async function crearDemo() {
     }
 }
 
-// Función para eliminar una demo vía DELETE
 async function eliminarDemo(idDemo) {
     if (!confirm(`¿Estás segura de que deseas eliminar la rutina DEMO con ID ${idDemo}?`)) return;
 
@@ -104,7 +104,6 @@ async function eliminarDemo(idDemo) {
 
         if (!response.ok) throw new Error("No se pudo eliminar la demo");
 
-        // Recargar tabla
         cargarDemos();
     } catch (error) {
         console.error("Error al eliminar la demo:", error);
