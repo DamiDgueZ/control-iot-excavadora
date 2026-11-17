@@ -17,16 +17,20 @@
             border-radius: 20px;
             backdrop-filter: blur(10px);
         }
+
         .table-glass {
             background: rgba(20, 24, 33, 0.85);
             backdrop-filter: blur(15px);
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+
         .table-dark-custom {
             background-color: transparent !important;
         }
-        .table-dark-custom th, .table-dark-custom td {
+
+        .table-dark-custom th,
+        .table-dark-custom td {
             background-color: transparent !important;
             color: #fff;
             border-color: rgba(255, 255, 255, 0.05);
@@ -36,41 +40,54 @@
 
 <body class="p-0 d-flex flex-column min-vh-100">
     <!-- Navbar / Navegación y Estado -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0" style="background: rgba(10,12,16,0.95) !important;">
-        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma IoT</span>
-        
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0"
+        style="background: rgba(10,12,16,0.95) !important;">
+        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma
+            IoT</span>
+
         <ul class="navbar-nav me-auto flex-row gap-3">
             <li class="nav-item">
                 <a class="nav-link text-secondary" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active fw-bold text-light" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i> Monitoreo</a>
+                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
+                    Monitoreo</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="admin.html"><i class="fas fa-cogs me-1"></i> Administración</a>
             </li>
         </ul>
-
+        
         <div class="d-flex gap-3 mt-2 mt-lg-0">
-            <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS: Desconectado</span>
-            <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API: ...</span>
-            <span id="badge-rds" class="badge bg-secondary p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS: Sin verificar</span>
+            <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS:
+                Desconectado</span>
+            <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API:
+                ...</span>
+            <span id="badge-rds" class="badge bg-secondary p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS:
+                Sin verificar</span>
         </div>
     </nav>
 
     <!-- Contenedor Principal de Monitoreo -->
     <div class="container px-3 flex-grow-1 d-flex flex-column justify-content-center my-3">
-        
+
         <!-- Tarjeta: Último Movimiento -->
         <div class="row mb-3">
             <div class="col-12">
                 <div class="card-ultimo-mov p-3 p-md-4 shadow-lg">
-                    <h6 class="text-info text-uppercase mb-1 fw-bold" style="font-size: 0.85rem;"><i class="fas fa-satellite-dish me-2"></i>Último estado reportado en tiempo real</h6>
+                    <h6 class="text-info text-uppercase mb-1 fw-bold" style="font-size: 0.85rem;"><i
+                            class="fas fa-satellite-dish me-2"></i>Último estado reportado en tiempo real</h6>
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                         <div>
-                            <h1 id="mov-nombre" class="fs-3 fs-md-2 fw-bold text-warning m-0 font-monospace">ESPERANDO DATOS...</h1>
+                            <h1 id="mov-nombre" class="fs-3 fs-md-2 fw-bold text-warning m-0 font-monospace">ESPERANDO
+                                DATOS...</h1>
                             <span id="mov-vehiculo" class="text-secondary small">Vehículo ID: 1 · Excavadora IoT</span>
                         </div>
                         <div class="text-md-end mt-2 mt-md-0">
-                            <div class="fs-6 text-light"><i class="far fa-calendar-alt text-info me-2"></i><span id="mov-fecha">--/--/----</span></div>
-                            <div class="fs-5 fw-bold text-info"><i class="far fa-clock text-info me-2"></i><span id="mov-hora">--:--:--</span></div>
+                            <div class="fs-6 text-light"><i class="far fa-calendar-alt text-info me-2"></i><span
+                                    id="mov-fecha">--/--/----</span></div>
+                            <div class="fs-5 fw-bold text-info"><i class="far fa-clock text-info me-2"></i><span
+                                    id="mov-hora">--:--:--</span></div>
                         </div>
                     </div>
                 </div>
@@ -81,7 +98,8 @@
         <div class="row mb-2">
             <div class="col-12">
                 <div class="table-glass shadow-lg p-3 border border-secondary">
-                    <h5 class="mb-3 text-warning fw-bold fs-6 fs-md-5"><i class="fas fa-list-ol me-2"></i>Historial de Movimientos (AWS RDS)</h5>
+                    <h5 class="mb-3 text-warning fw-bold fs-6 fs-md-5"><i class="fas fa-list-ol me-2"></i>Historial de
+                        Movimientos (AWS RDS)</h5>
                     <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
                         <table class="table table-dark-custom table-hover align-middle mb-0">
                             <thead class="text-info text-uppercase fs-7 sticky-top bg-dark" style="z-index: 1;">
@@ -95,7 +113,8 @@
                             <tbody id="tabla-historial-monitoreo">
                                 <tr>
                                     <td colspan="4" class="text-center text-muted py-4">
-                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div> Cargando registros desde AWS RDS...
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div> Cargando
+                                        registros desde AWS RDS...
                                     </td>
                                 </tr>
                             </tbody>
@@ -108,11 +127,14 @@
     </div>
 
     <!-- Pie de Página Fijo -->
-    <footer class="text-center p-2 text-secondary flex-shrink-0" style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
-        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong> | Desarrollado por Damaris Domínguez Zapata · 2026</small>
+    <footer class="text-center p-2 text-secondary flex-shrink-0"
+        style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong> | Desarrollado por Damaris
+            Domínguez Zapata · 2026</small>
     </footer>
 
     <!-- LÓGICA LOCAL DE MONITOREO -->
     <script src="assets/js/monitoreo.js"></script>
 </body>
+
 </html>
