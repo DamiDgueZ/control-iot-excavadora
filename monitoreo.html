@@ -9,6 +9,25 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css">
+
+    <!-- GUARDIA DE SEGURIDAD INSTANTÁNEA: Bloqueo si no hay sesión -->
+    <script>
+        (function () {
+            const usuarioStr = localStorage.getItem('iot_usuario');
+            const token = localStorage.getItem('iot_token');
+            let usuario = null;
+            try {
+                usuario = usuarioStr ? JSON.parse(usuarioStr) : null;
+            } catch (e) {
+                usuario = null;
+            }
+
+            if (!usuario || (!token && usuario.rol !== 'invitado')) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
+
     <style>
         .card-ultimo-mov {
             background: linear-gradient(135deg, rgba(13, 110, 253, 0.25), rgba(10, 12, 16, 0.85));
@@ -39,32 +58,43 @@
 </head>
 
 <body class="p-0 d-flex flex-column min-vh-100">
-    <!-- Navbar / Navegación y Estado -->
+    <!-- Navbar Unificada -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0"
         style="background: rgba(10,12,16,0.95) !important;">
-        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma
-            IoT</span>
+        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma IoT</span>
 
         <ul class="navbar-nav me-auto flex-row gap-3">
-            <li class="nav-item">
+            <li class="nav-item" id="nav-item-mis-vehiculos" style="display: none;">
+                <a class="nav-link text-secondary" href="mis-vehiculos.html"><i class="fas fa-truck-moving me-1"></i> Mis Vehículos</a>
+            </li>
+            <li class="nav-item" id="nav-item-control">
                 <a class="nav-link text-secondary" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
-                    Monitoreo</a>
+            <li class="nav-item" id="nav-item-monitoreo">
+                <a class="nav-link text-warning active" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i> Monitoreo</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" id="nav-item-admin" style="display: none;">
                 <a class="nav-link text-secondary" href="admin.html"><i class="fas fa-cogs me-1"></i> Administración</a>
             </li>
         </ul>
         
-        <div class="d-flex gap-3 mt-2 mt-lg-0">
-            <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS:
-                Desconectado</span>
-            <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API:
-                ...</span>
-            <span id="badge-rds" class="badge bg-secondary p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS:
-                Sin verificar</span>
+        <div class="d-flex gap-3 mt-2 mt-lg-0 align-items-center">
+            <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS: --</span>
+            <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API: --</span>
+            <span id="badge-rds" class="badge bg-secondary p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS: --</span>
+
+            <!-- Perfil de Usuario y Logout -->
+            <div class="dropdown ms-2">
+                <button class="btn btn-outline-secondary dropdown-toggle btn-sm text-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-user-circle text-warning fa-lg"></i>
+                    <span id="user-display-name" class="small fw-bold">Usuario</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                    <li><h6 id="user-display-rol" class="dropdown-header text-uppercase text-info small">Rol: --</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-danger small" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</button></li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -133,7 +163,24 @@
             Domínguez Zapata · 2026</small>
     </footer>
 
-    <!-- LÓGICA LOCAL DE MONITOREO -->
+    <!-- SCRIPTS DE AUTENTICACIÓN Y MONITOREO -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const { usuario } = obtenerSesionActual();
+            if (!usuario) return;
+
+            document.getElementById('user-display-name').textContent = usuario.nombre;
+            document.getElementById('user-display-rol').textContent = `Rol: ${usuario.rol}`;
+
+            if (usuario.rol === 'administrador') {
+                document.getElementById('nav-item-admin').style.display = 'block';
+            } else if (usuario.rol === 'usuario') {
+                document.getElementById('nav-item-mis-vehiculos').style.display = 'block';
+            }
+        });
+    </script>
     <script src="assets/js/monitoreo.js"></script>
 </body>
 
