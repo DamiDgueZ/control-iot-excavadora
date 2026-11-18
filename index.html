@@ -21,13 +21,13 @@
 
         <ul class="navbar-nav me-auto flex-row gap-3">
             <li class="nav-item">
-                <a class="nav-link text-secondary" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
+                <a class="nav-link text-warning active" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
                     Monitoreo</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" id="nav-item-admin" style="display: none;">
                 <a class="nav-link text-secondary" href="admin.html"><i class="fas fa-cogs me-1"></i> Administración</a>
             </li>
         </ul>
@@ -42,6 +42,19 @@
                 ...</span>
             <span id="badge-rds" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-database me-1"></i>RDS:
                 ...</span>
+
+            <!-- Perfil de Usuario y Logout -->
+            <div class="dropdown ms-2">
+                <button class="btn btn-outline-secondary dropdown-toggle btn-sm text-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-user-circle text-warning fa-lg"></i>
+                    <span id="user-display-name" class="small fw-bold">Usuario</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                    <li><h6 id="user-display-rol" class="dropdown-header text-uppercase text-info small">Rol: --</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><button class="dropdown-item text-danger small" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</button></li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -140,7 +153,28 @@
             Domínguez Zapata · 2026</small>
     </footer>
 
-    <!-- LÓGICA LOCAL DE CONTROL -->
+    <!-- SCRIPTS DE AUTENTICACIÓN Y CONTROL -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // Guardia de sesión: Si no hay token o usuario, redirige al login
+        document.addEventListener("DOMContentLoaded", () => {
+            const { usuario } = obtenerSesionActual();
+            if (!usuario) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Mostrar nombre y rol en la barra superior
+            document.getElementById('user-display-name').textContent = usuario.nombre;
+            document.getElementById('user-display-rol').textContent = `Rol: ${usuario.rol}`;
+
+            // Si es administrador, mostrar el enlace al panel de administración en la navbar
+            if (usuario.rol === 'administrador') {
+                document.getElementById('nav-item-admin').style.display = 'block';
+            }
+        });
+    </script>
     <script src="assets/js/app.js"></script>
 </body>
 
