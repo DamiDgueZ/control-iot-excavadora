@@ -39,6 +39,10 @@
             IoT</span>
 
         <ul class="navbar-nav me-auto flex-row gap-3">
+            <!-- Enlace visible solo para Clientes / Usuarios -->
+            <li class="nav-item" id="nav-item-mis-vehiculos" style="display: none;">
+                <a class="nav-link text-secondary" href="mis-vehiculos.html"><i class="fas fa-truck-moving me-1"></i> Mis Vehículos</a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link text-warning active" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
             </li>
@@ -185,6 +189,8 @@
 
             if (usuario.rol === 'administrador') {
                 document.getElementById('nav-item-admin').style.display = 'block';
+            } else if (usuario.rol === 'usuario') {
+                document.getElementById('nav-item-mis-vehiculos').style.display = 'block';
             }
         });
     </script>

@@ -144,12 +144,12 @@ function entrarComoInvitado() {
     redirigirSegunRol('invitado');
 }
 
-// Redirección inteligente según el rol
+// Redirección inteligente según el rol (CORREGIDA)
 function redirigirSegunRol(rol) {
     if (rol === 'administrador') {
         window.location.href = 'admin.html';
     } else if (rol === 'usuario') {
-        window.location.href = 'index.html';
+        window.location.href = 'mis-vehiculos.html'; // Redirige al panel del cliente comprador
     } else {
         window.location.href = 'exhibicion.html';
     }
