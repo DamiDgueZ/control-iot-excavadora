@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso a Plataforma IoT | Excavadora</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        .auth-glass-card {
+            background: rgba(20, 24, 33, 0.90);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            max-width: 460px;
+            width: 100%;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #ffc107;
+            color: #000;
+            font-weight: bold;
+        }
+        .nav-pills .nav-link {
+            color: #adb5bd;
+        }
+    </style>
+</head>
+
+<body class="p-0 d-flex flex-column min-vh-100">
+    <!-- Navbar unificada -->
+    <nav class="navbar navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0" style="background: rgba(10,12,16,0.95) !important;">
+        <span class="navbar-brand mb-0 h1 fw-bold"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma Comercial IoT</span>
+        <span id="badge-api-login" class="badge bg-secondary p-2 shadow-sm"><i class="fas fa-server me-1"></i>API: Comprobando...</span>
+    </nav>
+
+    <!-- Contenedor Central -->
+    <main class="container flex-grow-1 d-flex align-items-center justify-content-center my-4 px-3">
+        <div class="auth-glass-card p-4 p-md-5">
+            <div class="text-center mb-4">
+                <i class="fas fa-hard-hat fa-3x text-warning mb-2"></i>
+                <h4 class="fw-bold text-light mb-1">Portal de Acceso IoT</h4>
+                <p class="text-secondary small mb-0">Control, Monitoreo y Administración de Flota</p>
+            </div>
+
+            <!-- Alertas dinámicas -->
+            <div id="auth-alerta" class="alert d-none small py-2" role="alert"></div>
+
+            <!-- Pestañas Login / Registro -->
+            <ul class="nav nav-pills nav-fill mb-4 bg-black p-1 rounded-3 border border-secondary" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-login-btn" data-bs-toggle="pill" data-bs-target="#tab-login" type="button" role="tab">
+                        <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-registro-btn" data-bs-toggle="pill" data-bs-target="#tab-registro" type="button" role="tab">
+                        <i class="fas fa-user-plus me-1"></i> Registrarse
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="pills-tabContent">
+                <!-- FORMULARIO LOGIN -->
+                <div class="tab-pane fade show active" id="tab-login" role="tabpanel">
+                    <form id="form-login">
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label text-secondary small">Correo electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-black border-secondary text-secondary"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control bg-black text-light border-secondary" id="login-email" placeholder="correo@ejemplo.com" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="login-password" class="form-label text-secondary small">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-black border-secondary text-secondary"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control bg-black text-light border-secondary" id="login-password" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                        <button type="submit" id="btn-login" class="btn btn-warning w-100 fw-bold text-dark py-2 shadow">
+                            <i class="fas fa-arrow-right-to-bracket me-2"></i>Entrar a la Plataforma
+                        </button>
+                    </form>
+
+                    <!-- Accesos rápidos para pruebas en equipo -->
+                    <div class="mt-4 pt-3 border-top border-secondary">
+                        <p class="text-secondary small text-center mb-2">Cuentas de prueba rápidas:</p>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <button type="button" class="btn btn-outline-warning btn-sm" onclick="rellenarDemo('admin@excavadora.com', 'admin123')">Admin</button>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="rellenarDemo('usuario@excavadora.com', 'user123')">Usuario</button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="entrarComoInvitado()">Modo Invitado</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO REGISTRO -->
+                <div class="tab-pane fade" id="tab-registro" role="tabpanel">
+                    <form id="form-registro">
+                        <div class="mb-3">
+                            <label for="reg-nombre" class="form-label text-secondary small">Nombre completo</label>
+                            <input type="text" class="form-control bg-black text-light border-secondary" id="reg-nombre" placeholder="Ej. Damaris Domínguez" required minlength="3">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-email" class="form-label text-secondary small">Correo electrónico</label>
+                            <input type="email" class="form-control bg-black text-light border-secondary" id="reg-email" placeholder="correo@ejemplo.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-password" class="form-label text-secondary small">Contraseña (mínimo 6 caracteres)</label>
+                            <input type="password" class="form-control bg-black text-light border-secondary" id="reg-password" placeholder="••••••••" required minlength="6">
+                        </div>
+                        <div class="mb-4">
+                            <label for="reg-rol" class="form-label text-secondary small">Rol asignado en la plataforma</label>
+                            <select class="form-select bg-black text-light border-secondary" id="reg-rol" required>
+                                <option value="usuario" selected>Usuario (Cliente comprador)</option>
+                                <option value="administrador">Administrador (Empresa IoT)</option>
+                                <option value="invitado">Invitado (Prospecto de exhibición)</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="btn-registro" class="btn btn-success w-100 fw-bold py-2 shadow">
+                            <i class="fas fa-user-check me-2"></i>Crear Cuenta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pie de Página Fijo -->
+    <footer class="text-center p-2 text-secondary flex-shrink-0" style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong> | Desarrollado por Damaris Domínguez Zapata · 2026</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/auth.js"></script>
+</body>
+
+</html>
