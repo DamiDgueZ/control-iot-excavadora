@@ -1,21 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
     const { usuario } = obtenerSesionActual();
     if (usuario) {
-        document.getElementById('admin-display-name').textContent = usuario.nombre;
+        // Selector seguro compatible con el nuevo diseño de navbar unificada
+        const nameEl = document.getElementById('user-display-name') || document.getElementById('admin-display-name');
+        if (nameEl) nameEl.textContent = usuario.nombre;
     }
 
+    // Cargar datos automáticamente al abrir la página
     cargarUnidadesAdmin();
     cargarModelosAdmin();
     cargarAuditoriaAdmin();
 
     // Event Listeners para formularios modales
-    document.getElementById('form-crear-modelo').addEventListener('submit', registrarModelo);
-    document.getElementById('form-crear-unidad').addEventListener('submit', registrarUnidadFisica);
+    const formModelo = document.getElementById('form-crear-modelo');
+    const formUnidad = document.getElementById('form-crear-unidad');
+
+    if (formModelo) formModelo.addEventListener('submit', registrarModelo);
+    if (formUnidad) formUnidad.addEventListener('submit', registrarUnidadFisica);
 });
 
 // Cargar inventario de unidades físicas
 async function cargarUnidadesAdmin() {
     const tbody = document.getElementById('tabla-unidades-body');
+    if (!tbody) return;
+    
     try {
         const res = await fetch(`${BASE_URL}/unidades`, {
             headers: getAuthHeaders()
@@ -55,6 +63,8 @@ async function cargarUnidadesAdmin() {
 async function cargarModelosAdmin() {
     const tbody = document.getElementById('tabla-modelos-body');
     const selectModal = document.getElementById('unidad-modelo-select');
+    if (!tbody) return;
+
     try {
         const res = await fetch(`${BASE_URL}/modelos`, {
             headers: getAuthHeaders()
@@ -90,6 +100,8 @@ async function cargarModelosAdmin() {
 // Cargar bitácora de auditoría
 async function cargarAuditoriaAdmin() {
     const tbody = document.getElementById('tabla-auditoria-body');
+    if (!tbody) return;
+
     try {
         const res = await fetch(`${BASE_URL}/auditoria`, {
             headers: getAuthHeaders()
@@ -133,7 +145,11 @@ async function registrarModelo(e) {
         if (!res.ok) throw new Error(data.detail || 'Error al crear modelo');
 
         alert('¡Modelo comercial creado con éxito!');
-        bootstrap.Modal.getInstance(document.getElementById('modalCrearModelo')).hide();
+        const modalEl = document.getElementById('modalCrearModelo');
+        if (modalEl) {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modalInstance.hide();
+        }
         document.getElementById('form-crear-modelo').reset();
         cargarModelosAdmin();
     } catch (err) {
@@ -145,7 +161,8 @@ async function registrarModelo(e) {
 async function registrarUnidadFisica(e) {
     e.preventDefault();
     const id_modelo = parseInt(document.getElementById('unidad-modelo-select').value);
-    const id_vehiculo_iot = document.getElementById('unidad-vehiculo-iot').value ? parseInt(document.getElementById('unidad-vehiculo-iot').value) : null;
+    const id_vehiculo_iot_val = document.getElementById('unidad-vehiculo-iot').value;
+    const id_vehiculo_iot = id_vehiculo_iot_val ? parseInt(id_vehiculo_iot_val) : null;
     const numero_serie = document.getElementById('unidad-serie').value.trim();
     const estado_comercial = document.getElementById('unidad-estado').value;
 
@@ -159,7 +176,11 @@ async function registrarUnidadFisica(e) {
         if (!res.ok) throw new Error(data.detail || 'Error al registrar unidad');
 
         alert('¡Unidad física registrada correctamente!');
-        bootstrap.Modal.getInstance(document.getElementById('modalCrearUnidad')).hide();
+        const modalEl = document.getElementById('modalCrearUnidad');
+        if (modalEl) {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modalInstance.hide();
+        }
         document.getElementById('form-crear-unidad').reset();
         cargarUnidadesAdmin();
     } catch (err) {
