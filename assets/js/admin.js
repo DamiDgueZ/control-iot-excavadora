@@ -1,228 +1,200 @@
-const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
-const API_BASE_URL = `https://${HOST_IP}`;
-const VEHICULO_ID = 1;
+document.addEventListener('DOMContentLoaded', () => {
+    const { usuario } = obtenerSesionActual();
+    if (usuario) {
+        document.getElementById('admin-display-name').textContent = usuario.nombre;
+    }
 
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("Panel administrativo inicializado correctamente.");
-    cargarDemos();
+    cargarUnidadesAdmin();
+    cargarModelosAdmin();
+    cargarAuditoriaAdmin();
+
+    // Event Listeners para formularios modales
+    document.getElementById('form-crear-modelo').addEventListener('submit', registrarModelo);
+    document.getElementById('form-crear-unidad').addEventListener('submit', registrarUnidadFisica);
 });
 
-// 1. Obtener y listar las demos del vehículo 1
-async function cargarDemos() {
-    const tbody = document.getElementById("tabla-demos-admin");
+// Cargar inventario de unidades físicas
+async function cargarUnidadesAdmin() {
+    const tbody = document.getElementById('tabla-unidades-body');
     try {
-        const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true'
-            }
+        const res = await fetch(`${BASE_URL}/unidades`, {
+            headers: getAuthHeaders()
         });
-        
-        if (!response.ok) throw new Error("Error al obtener las rutinas DEMO");
-        
-        const data = await response.json();
-        const demos = Array.isArray(data) ? data : (data.demos || []);
-        
-        tbody.innerHTML = "";
+        if (!res.ok) throw new Error('Error al obtener unidades');
+        const unidades = await res.json();
 
-        if (!demos || demos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">No hay rutinas DEMO registradas para este vehículo.</td></tr>`;
+        if (unidades.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No hay unidades registradas.</td></tr>';
             return;
         }
 
-        demos.forEach((demo, index) => {
-            const idDemo = demo.id_demo || demo.id;
-            const nombreDemo = demo.nombre || demo.descripcion || "Rutina sin nombre";
-            
-            let tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td class="fw-bold text-warning">${idDemo}</td>
-                <td>${nombreDemo}</td>
-                <td class="text-muted small">${demo.fecha_creacion || demo.fecha || "Reciente"}</td>
-                <td class="text-center">
-                    <div class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-sm btn-outline-info px-3 shadow-sm" onclick="abrirModalMovimientos(${idDemo}, '${nombreDemo}')">
-                            <i class="fas fa-list-ol me-1"></i> Movimientos
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger px-3 shadow-sm" onclick="eliminarDemo(${idDemo})">
-                            <i class="fas fa-trash-alt me-1"></i> Eliminar
-                        </button>
-                    </div>
+        tbody.innerHTML = unidades.map(u => `
+            <tr>
+                <td>${u.id_unidad}</td>
+                <td><span class="fw-bold text-warning">${u.nombre_modelo || 'N/D'}</span></td>
+                <td><code class="text-info">${u.numero_serie}</code></td>
+                <td>
+                    <span class="badge bg-${obtenerColorEstado(u.estado_comercial)} text-uppercase">
+                        ${u.estado_comercial}
+                    </span>
                 </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-    } catch (error) {
-        console.error("Error conectando con la API:", error);
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Error de conexión con el servidor.</td></tr>`;
-    }
-}
-
-// 2. Crear una nueva demo vía POST
-async function crearDemo() {
-    const inputNombre = document.getElementById("nombre-demo");
-    const nombre = inputNombre.value.trim();
-
-    if (!nombre) {
-        alert("Por favor ingresa un nombre para la rutina DEMO.");
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"
-            },
-            body: JSON.stringify({ nombre: nombre, descripcion: "Creado desde panel admin" })
-        });
-
-        if (!response.ok) throw new Error("No se pudo crear la demo");
-
-        inputNombre.value = "";
-        const modalEl = document.getElementById("modalNuevaDemo");
-        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.hide();
-        
-        cargarDemos();
-    } catch (error) {
-        console.error("Error al crear la demo:", error);
-        alert("Ocurrió un error al intentar registrar la demo.");
-    }
-}
-
-// 3. Eliminar una demo vía DELETE
-async function eliminarDemo(idDemo) {
-    if (!confirm(`¿Estás segura de que deseas eliminar la rutina DEMO con ID ${idDemo}?`)) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/demos/${idDemo}`, {
-            method: "DELETE",
-            headers: { "ngrok-skip-browser-warning": "true" }
-        });
-
-        if (!response.ok) throw new Error("No se pudo eliminar la demo");
-        cargarDemos();
-    } catch (error) {
-        console.error("Error al eliminar la demo:", error);
-        alert("No se pudo completar la eliminación.");
-    }
-}
-
-// --- GESTIÓN DE MOVIMIENTOS DE LA DEMO ---
-
-async function abrirModalMovimientos(idDemo, nombreDemo) {
-    document.getElementById("modal-id-demo-activo").value = idDemo;
-    document.getElementById("demo-titulo-modal").textContent = `${nombreDemo} (ID: ${idDemo})`;
-    
-    const modalEl = document.getElementById("modalMovimientosDemo");
-    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-    modal.show();
-
-    await cargarMovimientosDemo(idDemo);
-}
-
-async function cargarMovimientosDemo(idDemo) {
-    const tbody = document.getElementById("tabla-movimientos-demo");
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm me-2"></div>Cargando pasos...</td></tr>`;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/demos/${idDemo}/movimientos`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json', 'ngrok-skip-browser-warning': 'true' }
-        });
-
-        if (!response.ok) throw new Error("Error al obtener movimientos de la demo");
-
-        const data = await response.json();
-        const movimientos = Array.isArray(data) ? data : (data.movimientos || []);
-
-        tbody.innerHTML = "";
-
-        if (movimientos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Esta demo aún no tiene movimientos configurados.</td></tr>`;
-            return;
-        }
-
-        movimientos.forEach((mov) => {
-            const idMov = mov.id_movimiento || mov.id;
-            let tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td class="fw-bold text-info">${mov.orden}</td>
-                <td>Comando ID: ${mov.id_comando}</td>
-                <td>${mov.duracion_ms} ms</td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-danger px-3 shadow-sm" onclick="eliminarMovimientoDemo(${idMov}, ${idDemo})">
-                        <i class="fas fa-trash-alt me-1"></i> Eliminar
+                <td>${u.propietario_nombre ? `<i class="fas fa-user text-success me-1"></i>${u.propietario_nombre}` : '<span class="text-muted italic">Sin asignar</span>'}</td>
+                <td>
+                    <button class="btn btn-outline-info btn-sm" onclick="promptAsignarUnidad(${u.id_unidad})" title="Asignar a cliente">
+                        <i class="fas fa-user-tag"></i>
                     </button>
                 </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-    } catch (error) {
-        console.error("Error al cargar movimientos:", error);
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Error al cargar los pasos de la demo.</td></tr>`;
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">Error cargando inventario: ${err.message}</td></tr>`;
     }
 }
 
-async function agregarMovimientoDemo() {
-    const idDemo = document.getElementById("modal-id-demo-activo").value;
-    const idComando = parseInt(document.getElementById("select-comando").value);
-    const orden = parseInt(document.getElementById("input-orden").value);
-    const duracionMs = parseInt(document.getElementById("input-duracion").value);
-
-    if (!idComando || isNaN(orden) || isNaN(duracionMs)) {
-        alert("Por favor completa todos los campos del movimiento.");
-        return;
-    }
-
+// Cargar catálogo de modelos comerciales
+async function cargarModelosAdmin() {
+    const tbody = document.getElementById('tabla-modelos-body');
+    const selectModal = document.getElementById('unidad-modelo-select');
     try {
-        const response = await fetch(`${API_BASE_URL}/demos/${idDemo}/movimientos`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"
-            },
-            body: JSON.stringify({
-                id_comando: idComando,
-                orden: orden,
-                duracion_ms: duracionMs,
-                pausa_ms: 500
-            })
+        const res = await fetch(`${BASE_URL}/modelos`, {
+            headers: getAuthHeaders()
         });
+        if (!res.ok) throw new Error('Error al obtener modelos');
+        const modelos = await res.json();
 
-        if (!response.ok) throw new Error("No se pudo agregar el movimiento");
+        if (modelos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No hay modelos registrados.</td></tr>';
+            if (selectModal) selectModal.innerHTML = '<option value="">No hay modelos disponibles</option>';
+            return;
+        }
 
-        document.getElementById("select-comando").value = "";
-        document.getElementById("input-orden").value = "";
-        document.getElementById("input-duracion").value = "";
+        tbody.innerHTML = modelos.map(m => `
+            <tr>
+                <td>${m.id_modelo}</td>
+                <td class="fw-bold text-light">${m.nombre_modelo}</td>
+                <td>${m.descripcion || '--'}</td>
+                <td><small class="text-secondary">${m.especificaciones_tecnicas || '--'}</small></td>
+            </tr>
+        `).join('');
 
-        await cargarMovimientosDemo(idDemo);
-    } catch (error) {
-        console.error("Error al agregar movimiento:", error);
-        alert("Ocurrió un error al registrar el paso en el servidor.");
+        if (selectModal) {
+            selectModal.innerHTML = '<option value="">Seleccione un modelo...</option>' + modelos.map(m => `
+                <option value="${m.id_modelo}">${m.nombre_modelo}</option>
+            `).join('');
+        }
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Error cargando modelos: ${err.message}</td></tr>`;
     }
 }
 
-async function eliminarMovimientoDemo(idMovimiento, idDemo) {
-    if (!confirm("¿Estás segura de eliminar este paso de la rutina?")) return;
+// Cargar bitácora de auditoría
+async function cargarAuditoriaAdmin() {
+    const tbody = document.getElementById('tabla-auditoria-body');
+    try {
+        const res = await fetch(`${BASE_URL}/auditoria`, {
+            headers: getAuthHeaders()
+        });
+        if (!res.ok) throw new Error('Error al obtener auditoría');
+        const logs = await res.json();
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Sin registros de auditoría.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = logs.map(l => `
+            <tr>
+                <td>${l.id_auditoria}</td>
+                <td class="text-warning">${l.usuario || 'Sistema / Invitado'}</td>
+                <td><span class="badge bg-secondary">${l.accion}</span></td>
+                <td>${l.detalles || '--'}</td>
+                <td class="text-muted small">${new Date(l.fecha_evento).toLocaleString()}</td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">Error cargando auditoría: ${err.message}</td></tr>`;
+    }
+}
+
+// Registrar nuevo modelo comercial
+async function registrarModelo(e) {
+    e.preventDefault();
+    const nombre_modelo = document.getElementById('modelo-nombre').value.trim();
+    const descripcion = document.getElementById('modelo-desc').value.trim();
+    const especificaciones_tecnicas = document.getElementById('modelo-specs').value.trim();
 
     try {
-        const response = await fetch(`${API_BASE_URL}/demo-movimientos/${idMovimiento}`, {
-            method: "DELETE",
-            headers: { "ngrok-skip-browser-warning": "true" }
+        const res = await fetch(`${BASE_URL}/modelos`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ nombre_modelo, descripcion, especificaciones_tecnicas })
         });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Error al crear modelo');
 
-        if (!response.ok) throw new Error("No se pudo eliminar el movimiento");
+        alert('¡Modelo comercial creado con éxito!');
+        bootstrap.Modal.getInstance(document.getElementById('modalCrearModelo')).hide();
+        document.getElementById('form-crear-modelo').reset();
+        cargarModelosAdmin();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
 
-        await cargarMovimientosDemo(idDemo);
-    } catch (error) {
-        console.error("Error al eliminar movimiento:", error);
-        alert("No se pudo completar la eliminación del paso.");
+// Registrar nueva unidad física
+async function registrarUnidadFisica(e) {
+    e.preventDefault();
+    const id_modelo = parseInt(document.getElementById('unidad-modelo-select').value);
+    const id_vehiculo_iot = document.getElementById('unidad-vehiculo-iot').value ? parseInt(document.getElementById('unidad-vehiculo-iot').value) : null;
+    const numero_serie = document.getElementById('unidad-serie').value.trim();
+    const estado_comercial = document.getElementById('unidad-estado').value;
+
+    try {
+        const res = await fetch(`${BASE_URL}/unidades`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ id_modelo, id_vehiculo_iot, numero_serie, estado_comercial })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Error al registrar unidad');
+
+        alert('¡Unidad física registrada correctamente!');
+        bootstrap.Modal.getInstance(document.getElementById('modalCrearUnidad')).hide();
+        document.getElementById('form-crear-unidad').reset();
+        cargarUnidadesAdmin();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Asignar unidad a un propietario (Cliente ID)
+async function promptAsignarUnidad(idUnidad) {
+    const idPropietarioStr = prompt("Ingrese el ID del cliente comprador (ID de usuario):");
+    if (!idPropietarioStr) return;
+    const id_propietario = parseInt(idPropietarioStr);
+
+    try {
+        const res = await fetch(`${BASE_URL}/unidades/${idUnidad}/asignar`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ id_propietario, estado_comercial: 'vendido' })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Error al asignar unidad');
+
+        alert('¡Unidad asignada exitosamente al cliente!');
+        cargarUnidadesAdmin();
+        cargarAuditoriaAdmin();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+function obtenerColorEstado(estado) {
+    switch (estado) {
+        case 'disponible': return 'primary';
+        case 'vendido': return 'success';
+        case 'exhibicion': return 'warning';
+        default: return 'secondary';
     }
 }
