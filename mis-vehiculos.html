@@ -118,16 +118,18 @@
             document.getElementById('user-display-name').textContent = usuario.nombre;
             document.getElementById('user-display-rol').textContent = `Rol: ${usuario.rol}`;
 
-            // Control de visibilidad del navbar según el rol
-            if (usuario.rol === 'administrador') {
+            // Control robusto de visibilidad del navbar normalizando el texto del rol
+            const rolNormalizado = (usuario.rol || '').toLowerCase().trim();
+
+            if (rolNormalizado === 'administrador') {
                 const navAdmin = document.getElementById('nav-item-admin');
                 if (navAdmin) navAdmin.style.display = 'block';
-            } else if (usuario.rol === 'usuario') {
+            } else if (rolNormalizado === 'usuario') {
                 const navVehiculos = document.getElementById('nav-item-mis-vehiculos');
                 const navDemos = document.getElementById('nav-item-mis-demos');
 
                 if (navVehiculos) navVehiculos.style.display = 'block';
-                if (navDemos) navDemos.style.display = 'block'; // <- Activado correctamente
+                if (navDemos) navDemos.style.display = 'block'; // <- Activado garantizado
             }
 
             const contenedor = document.getElementById('contenedor-mis-vehiculos');
