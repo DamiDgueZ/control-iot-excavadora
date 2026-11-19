@@ -1,23 +1,36 @@
-const HOST_IP = 'ultra-silver-unblessed.ngrok-free.dev';
-const API_BASE_URL = `https://${HOST_IP}`;
 const VEHICULO_ID = 1;
 
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("Panel administrativo inicializado correctamente.");
+    const { usuario } = obtenerSesionActual();
+    if (usuario) {
+        const nameEl = document.getElementById('user-display-name');
+        const rolEl = document.getElementById('user-display-rol');
+        if (nameEl) nameEl.textContent = usuario.nombre;
+        if (rolEl) rolEl.textContent = `Rol: ${usuario.rol}`;
+
+        // Mostrar enlaces según rol en la barra unificada
+        if (usuario.rol === 'administrador') {
+            const navAdmin = document.getElementById('nav-item-admin');
+            if (navAdmin) navAdmin.style.display = 'block';
+        } else if (usuario.rol === 'usuario') {
+            const navVehiculos = document.getElementById('nav-item-mis-vehiculos');
+            if (navVehiculos) navVehiculos.style.display = 'block';
+        }
+    }
+
+    console.log("Módulo de Demos de Cliente inicializado correctamente.");
     cargarDemos();
 });
 
 // 1. Obtener y listar las demos del vehículo 1
 async function cargarDemos() {
     const tbody = document.getElementById("tabla-demos-admin");
+    if (!tbody) return;
+
     try {
-        const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
+        const response = await fetch(`${BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
             method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true'
-            }
+            headers: getAuthHeaders()
         });
         
         if (!response.ok) throw new Error("Error al obtener las rutinas DEMO");
@@ -32,7 +45,7 @@ async function cargarDemos() {
             return;
         }
 
-        demos.forEach((demo, index) => {
+        demos.forEach((demo) => {
             const idDemo = demo.id_demo || demo.id;
             const nombreDemo = demo.nombre || demo.descripcion || "Rutina sin nombre";
             
@@ -72,13 +85,10 @@ async function crearDemo() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
+        const response = await fetch(`${BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"
-            },
-            body: JSON.stringify({ nombre: nombre, descripcion: "Creado desde panel admin" })
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ nombre: nombre, descripcion: "Creado desde portal de cliente" })
         });
 
         if (!response.ok) throw new Error("No se pudo crear la demo");
@@ -100,9 +110,9 @@ async function eliminarDemo(idDemo) {
     if (!confirm(`¿Estás segura de que deseas eliminar la rutina DEMO con ID ${idDemo}?`)) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/demos/${idDemo}`, {
+        const response = await fetch(`${BASE_URL}/demos/${idDemo}`, {
             method: "DELETE",
-            headers: { "ngrok-skip-browser-warning": "true" }
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) throw new Error("No se pudo eliminar la demo");
@@ -128,12 +138,14 @@ async function abrirModalMovimientos(idDemo, nombreDemo) {
 
 async function cargarMovimientosDemo(idDemo) {
     const tbody = document.getElementById("tabla-movimientos-demo");
+    if (!tbody) return;
+
     tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm me-2"></div>Cargando pasos...</td></tr>`;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/demos/${idDemo}/movimientos`, {
+        const response = await fetch(`${BASE_URL}/demos/${idDemo}/movimientos`, {
             method: 'GET',
-            headers: { 'Accept': 'application/json', 'ngrok-skip-browser-warning': 'true' }
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) throw new Error("Error al obtener movimientos de la demo");
@@ -182,12 +194,9 @@ async function agregarMovimientoDemo() {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/demos/${idDemo}/movimientos`, {
+        const response = await fetch(`${BASE_URL}/demos/${idDemo}/movimientos`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true"
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 id_comando: idComando,
                 orden: orden,
@@ -213,9 +222,9 @@ async function eliminarMovimientoDemo(idMovimiento, idDemo) {
     if (!confirm("¿Estás segura de eliminar este paso de la rutina?")) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/demo-movimientos/${idMovimiento}`, {
+        const response = await fetch(`${BASE_URL}/demo-movimientos/${idMovimiento}`, {
             method: "DELETE",
-            headers: { "ngrok-skip-browser-warning": "true" }
+            headers: getAuthHeaders()
         });
 
         if (!response.ok) throw new Error("No se pudo eliminar el movimiento");
