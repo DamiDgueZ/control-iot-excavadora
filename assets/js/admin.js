@@ -1,28 +1,29 @@
+let clientesCache = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     const { usuario } = obtenerSesionActual();
     if (usuario) {
-        // Selector seguro compatible con el nuevo diseño de navbar unificada
         const nameEl = document.getElementById('user-display-name') || document.getElementById('admin-display-name');
         if (nameEl) nameEl.textContent = usuario.nombre;
     }
 
-    // 1. Verificar estado de la API y encender el indicador visual superior
     verificarSaludApiAdmin();
-
-    // 2. Cargar datos automáticamente al abrir la página
+    cargarClientesAdmin();
     cargarUnidadesAdmin();
     cargarModelosAdmin();
     cargarAuditoriaAdmin();
 
-    // Event Listeners para formularios modales
     const formModelo = document.getElementById('form-crear-modelo');
     const formUnidad = document.getElementById('form-crear-unidad');
+    const formAsignar = document.getElementById('form-asignar-unidad');
+    const formEstado = document.getElementById('form-cambiar-estado');
 
     if (formModelo) formModelo.addEventListener('submit', registrarModelo);
     if (formUnidad) formUnidad.addEventListener('submit', registrarUnidadFisica);
+    if (formAsignar) formAsignar.addEventListener('submit', guardarAsignacionUnidad);
+    if (formEstado) formEstado.addEventListener('submit', guardarEstadoUnidad);
 });
 
-// Verificar disponibilidad de la API y actualizar la insignia superior
 async function verificarSaludApiAdmin() {
     const badge = document.getElementById('badge-api');
     if (!badge) return;
@@ -43,11 +44,33 @@ async function verificarSaludApiAdmin() {
     }
 }
 
+// Cargar usuarios/clientes para conocer su ID al asignar una unidad
+async function cargarClientesAdmin() {
+    const select = document.getElementById('asignar-cliente-select');
+    try {
+        const res = await fetch(`${BASE_URL}/usuarios`, {
+            headers: getAuthHeaders()
+        });
+        if (!res.ok) throw new Error('No se pudo cargar usuarios');
+        const usuarios = await res.json();
+        clientesCache = usuarios.filter(u => (u.rol || '').toLowerCase() === 'usuario');
+
+        if (select) {
+            select.innerHTML = '<option value="">-- Sin asignar / Liberar --</option>' +
+                clientesCache.map(c => `<option value="${c.id_usuario}">ID #${c.id_usuario} — ${c.nombre} (${c.email})</option>`).join('');
+        }
+    } catch {
+        if (select) {
+            select.innerHTML = '<option value="">No disponible (usa el campo ID manual)</option>';
+        }
+    }
+}
+
 // Cargar inventario de unidades físicas
 async function cargarUnidadesAdmin() {
     const tbody = document.getElementById('tabla-unidades-body');
     if (!tbody) return;
-    
+
     try {
         const res = await fetch(`${BASE_URL}/unidades`, {
             headers: getAuthHeaders()
@@ -70,11 +93,16 @@ async function cargarUnidadesAdmin() {
                         ${u.estado_comercial}
                     </span>
                 </td>
-                <td>${u.propietario_nombre ? `<i class="fas fa-user text-success me-1"></i>${u.propietario_nombre}` : '<span class="text-muted italic">Sin asignar</span>'}</td>
+                <td>${u.propietario_nombre ? `<i class="fas fa-user text-success me-1"></i>${u.propietario_nombre} (ID: ${u.id_propietario || '--'})` : '<span class="text-muted italic">Sin asignar</span>'}</td>
                 <td>
-                    <button class="btn btn-outline-info btn-sm" onclick="promptAsignarUnidad(${u.id_unidad})" title="Asignar a cliente">
-                        <i class="fas fa-user-tag"></i>
-                    </button>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-outline-info btn-sm" onclick="abrirModalAsignar(${u.id_unidad}, ${u.id_propietario || 'null'}, '${u.estado_comercial}')" title="Asignar a cliente">
+                            <i class="fas fa-user-tag"></i>
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="abrirModalEstado(${u.id_unidad}, '${u.estado_comercial}')" title="Cambiar estado comercial">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -212,22 +240,81 @@ async function registrarUnidadFisica(e) {
     }
 }
 
-// Asignar unidad a un propietario (Cliente ID)
-async function promptAsignarUnidad(idUnidad) {
-    const idPropietarioStr = prompt("Ingrese el ID del cliente comprador (ID de usuario):");
-    if (!idPropietarioStr) return;
-    const id_propietario = parseInt(idPropietarioStr);
+// Abrir modal para asignar unidad a un cliente comprador
+function abrirModalAsignar(idUnidad, idPropietarioActual, estadoActual) {
+    document.getElementById('asignar-id-unidad').value = idUnidad;
+    const select = document.getElementById('asignar-cliente-select');
+    const manual = document.getElementById('asignar-cliente-manual');
+    const estadoSel = document.getElementById('asignar-estado-select');
+
+    if (select) select.value = idPropietarioActual ? String(idPropietarioActual) : '';
+    if (manual) manual.value = idPropietarioActual ? String(idPropietarioActual) : '';
+    if (estadoSel) estadoSel.value = estadoActual || 'vendido';
+
+    const modalEl = document.getElementById('modalAsignarUnidad');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+async function guardarAsignacionUnidad(e) {
+    e.preventDefault();
+    const idUnidad = parseInt(document.getElementById('asignar-id-unidad').value);
+    const manualVal = document.getElementById('asignar-cliente-manual').value.trim();
+    const selectVal = document.getElementById('asignar-cliente-select').value;
+    const idRaw = manualVal || selectVal;
+    const id_propietario = idRaw ? parseInt(idRaw) : null;
+    const estado_comercial = document.getElementById('asignar-estado-select').value;
 
     try {
         const res = await fetch(`${BASE_URL}/unidades/${idUnidad}/asignar`, {
             method: 'PUT',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ id_propietario, estado_comercial: 'vendido' })
+            body: JSON.stringify({ id_propietario, estado_comercial })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Error al asignar unidad');
 
-        alert('¡Unidad asignada exitosamente al cliente!');
+        alert('¡Unidad actualizada y asignada exitosamente!');
+        const modalEl = document.getElementById('modalAsignarUnidad');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+
+        cargarUnidadesAdmin();
+        cargarAuditoriaAdmin();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Abrir modal para cambiar estado comercial de una unidad
+function abrirModalEstado(idUnidad, estadoActual) {
+    document.getElementById('estado-id-unidad').value = idUnidad;
+    document.getElementById('estado-comercial-select').value = estadoActual || 'disponible';
+
+    const modalEl = document.getElementById('modalCambiarEstado');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+async function guardarEstadoUnidad(e) {
+    e.preventDefault();
+    const idUnidad = parseInt(document.getElementById('estado-id-unidad').value);
+    const estado_comercial = document.getElementById('estado-comercial-select').value;
+
+    try {
+        const res = await fetch(`${BASE_URL}/unidades/${idUnidad}/estado`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ estado_comercial })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Error al cambiar estado comercial');
+
+        alert('¡Estado comercial actualizado con éxito!');
+        const modalEl = document.getElementById('modalCambiarEstado');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+
         cargarUnidadesAdmin();
         cargarAuditoriaAdmin();
     } catch (err) {

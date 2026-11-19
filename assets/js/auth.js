@@ -1,4 +1,3 @@
-// Usa API_BASE_URL si ya viene definido en config.js; de lo contrario usa tu dominio ngrok
 const BASE_URL = (typeof API_BASE_URL !== 'undefined')
     ? API_BASE_URL
     : 'https://ultra-silver-unblessed.ngrok-free.dev';
@@ -17,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Verifica disponibilidad de la API AWS
 async function verificarSaludApiLogin() {
     const badge = document.getElementById('badge-api-login');
     if (!badge) return;
@@ -38,7 +36,6 @@ async function verificarSaludApiLogin() {
     }
 }
 
-// Mostrar alertas limpias en pantalla
 function mostrarAlertaAuth(mensaje, tipo = 'danger') {
     const alerta = document.getElementById('auth-alerta');
     if (!alerta) return;
@@ -47,7 +44,6 @@ function mostrarAlertaAuth(mensaje, tipo = 'danger') {
     alerta.classList.remove('d-none');
 }
 
-// Iniciar sesión contra POST /auth/login
 async function manejarLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-login');
@@ -73,7 +69,6 @@ async function manejarLogin(e) {
             throw new Error(data.detail || 'Error al iniciar sesión');
         }
 
-        // Guardar sesión en localStorage
         localStorage.setItem('iot_token', data.access_token);
         localStorage.setItem('iot_usuario', JSON.stringify(data.usuario));
 
@@ -86,14 +81,14 @@ async function manejarLogin(e) {
     }
 }
 
-// Registrar usuario nuevo contra POST /auth/registro
+// Registrar usuario nuevo como 'usuario' en POST /auth/registro
 async function manejarRegistro(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-registro');
     const nombre = document.getElementById('reg-nombre').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
-    const rol = document.getElementById('reg-rol').value;
+    const rol = 'usuario';
 
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
@@ -111,7 +106,13 @@ async function manejarRegistro(e) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.detail || 'No se pudo completar el registro');
+            let detalleError = 'No se pudo completar el registro';
+            if (typeof data.detail === 'string') {
+                detalleError = data.detail;
+            } else if (Array.isArray(data.detail)) {
+                detalleError = data.detail.map(d => d.msg).join(', ');
+            }
+            throw new Error(detalleError);
         }
 
         mostrarAlertaAuth('Cuenta creada correctamente. Ahora puedes iniciar sesión.', 'success');
@@ -126,13 +127,11 @@ async function manejarRegistro(e) {
     }
 }
 
-// Rellenar credenciales de prueba
 function rellenarDemo(email, password) {
     document.getElementById('login-email').value = email;
     document.getElementById('login-password').value = password;
 }
 
-// Acceso directo como invitado sin credenciales permanentes
 function entrarComoInvitado() {
     localStorage.removeItem('iot_token');
     localStorage.setItem('iot_usuario', JSON.stringify({
@@ -144,20 +143,15 @@ function entrarComoInvitado() {
     redirigirSegunRol('invitado');
 }
 
-// Redirección inteligente según el rol (CORREGIDA)
 function redirigirSegunRol(rol) {
     if (rol === 'administrador') {
         window.location.href = 'admin.html';
     } else if (rol === 'usuario') {
-        window.location.href = 'mis-vehiculos.html'; // Redirige al panel del cliente comprador
+        window.location.href = 'mis-vehiculos.html';
     } else {
         window.location.href = 'exhibicion.html';
     }
 }
-
-// =========================================================
-// UTILIDADES EXPORTABLES PARA LAS DEMÁS VISTAS
-// =========================================================
 
 function obtenerSesionActual() {
     const token = localStorage.getItem('iot_token');

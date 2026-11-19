@@ -113,11 +113,9 @@
                             <input type="password" class="form-control bg-black text-light border-secondary" id="reg-password" placeholder="••••••••" required minlength="6">
                         </div>
                         <div class="mb-4">
-                            <label for="reg-rol" class="form-label text-secondary small">Rol asignado en la plataforma</label>
-                            <select class="form-select bg-black text-light border-secondary" id="reg-rol" required>
+                            <label for="reg-rol" class="form-label text-secondary small">Tipo de cuenta</label>
+                            <select class="form-select bg-black text-light border-secondary" id="reg-rol" disabled>
                                 <option value="usuario" selected>Usuario (Cliente comprador)</option>
-                                <option value="administrador">Administrador (Empresa IoT)</option>
-                                <option value="invitado">Invitado (Prospecto de exhibición)</option>
                             </select>
                         </div>
                         <button type="submit" id="btn-registro" class="btn btn-success w-100 fw-bold py-2 shadow">
