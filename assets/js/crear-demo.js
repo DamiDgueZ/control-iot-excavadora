@@ -1,33 +1,41 @@
-const VEHICULO_ID = 1;
+let VEHICULO_ID = null;
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
     const { usuario } = obtenerSesionActual();
-    if (usuario) {
-        const nameEl = document.getElementById('user-display-name');
-        const rolEl = document.getElementById('user-display-rol');
-        if (nameEl) nameEl.textContent = usuario.nombre;
-        if (rolEl) rolEl.textContent = `Rol: ${usuario.rol}`;
+    if (!usuario) return;
 
-        // Mostrar enlaces según rol en la barra unificada
-        if (usuario.rol === 'administrador') {
-            const navAdmin = document.getElementById('nav-item-admin');
-            if (navAdmin) navAdmin.style.display = 'block';
-        } else if (usuario.rol === 'usuario') {
-            const navVehiculos = document.getElementById('nav-item-mis-vehiculos');
-            const navDemos = document.getElementById('nav-item-mis-demos');
-            if (navVehiculos) navVehiculos.style.display = 'block';
-            if (navDemos) navDemos.style.display = 'block';
-        }
+    const nameEl = document.getElementById('user-display-name');
+    const rolEl = document.getElementById('user-display-rol');
+    if (nameEl) nameEl.textContent = usuario.nombre;
+    if (rolEl) rolEl.textContent = `Rol: ${usuario.rol}`;
+
+    // Mostrar enlaces según rol en la barra unificada
+    if (usuario.rol === 'administrador') {
+        const navAdmin = document.getElementById('nav-item-admin');
+        if (navAdmin) navAdmin.style.display = 'block';
+    } else if (usuario.rol === 'usuario') {
+        const navVehiculos = document.getElementById('nav-item-mis-vehiculos');
+        const navDemos = document.getElementById('nav-item-mis-demos');
+        if (navVehiculos) navVehiculos.style.display = 'block';
+        if (navDemos) navDemos.style.display = 'block';
     }
+
+    const params = new URLSearchParams(window.location.search);
+    VEHICULO_ID = await obtenerVehiculoAutorizado(params.get('id'), 1);
+    if (!VEHICULO_ID) return;
+
+    window.VEHICULO_ID_AUTORIZADO = VEHICULO_ID;
+    const contenedor = document.getElementById('contenido-protegido');
+    if (contenedor) contenedor.classList.remove('d-none');
 
     console.log("Módulo de Demos de Cliente inicializado correctamente.");
     cargarDemos();
 });
 
-// 1. Obtener y listar las demos del vehículo 1
+// 1. Obtener y listar las demos del vehículo autorizado
 async function cargarDemos() {
     const tbody = document.getElementById("tabla-demos-admin");
-    if (!tbody) return;
+    if (!tbody || !VEHICULO_ID) return;
 
     try {
         const response = await fetch(`${BASE_URL}/vehiculos/${VEHICULO_ID}/demos`, {
@@ -83,6 +91,11 @@ async function crearDemo() {
 
     if (!nombre) {
         alert("Por favor ingresa un nombre para la rutina DEMO.");
+        return;
+    }
+
+    if (!VEHICULO_ID) {
+        alert("No hay un vehículo autorizado para crear la demo.");
         return;
     }
 

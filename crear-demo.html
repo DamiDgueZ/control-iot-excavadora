@@ -86,7 +86,7 @@
     </nav>
 
     <!-- Contenedor Principal de Demos -->
-    <div class="container px-3 flex-grow-1 my-4">
+    <div id="contenido-protegido" class="container px-3 flex-grow-1 my-4 d-none">
         
         <div class="row mb-4">
             <div class="col-12">
@@ -243,16 +243,5 @@
     <!-- SCRIPTS EXTERNOS -->
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/crear-demo.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            const { usuario } = obtenerSesionActual();
-            if (!usuario) return;
-
-            const params = new URLSearchParams(window.location.search);
-            const idAutorizado = await obtenerVehiculoAutorizado(params.get('id'), 1);
-            if (!idAutorizado) return;
-            window.VEHICULO_ID_AUTORIZADO = idAutorizado;
-        });
-    </script>
 </body>
 </html>

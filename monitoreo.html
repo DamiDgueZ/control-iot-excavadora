@@ -116,7 +116,7 @@
     </nav>
 
     <!-- Contenedor Principal de Monitoreo -->
-    <div class="container px-3 flex-grow-1 d-flex flex-column justify-content-center my-3">
+    <div id="contenido-protegido" class="container px-3 flex-grow-1 d-flex flex-column justify-content-center my-3 d-none">
 
         <!-- Tarjeta: Último Movimiento -->
         <div class="row mb-3">
@@ -205,7 +205,10 @@
             const params = new URLSearchParams(window.location.search);
             const idAutorizado = await obtenerVehiculoAutorizado(params.get('id'), 1);
             if (!idAutorizado) return;
+
             window.VEHICULO_ID_AUTORIZADO = idAutorizado;
+            const contenedor = document.getElementById('contenido-protegido');
+            if (contenedor) contenedor.classList.remove('d-none');
         });
     </script>
     <script src="assets/js/monitoreo.js"></script>
