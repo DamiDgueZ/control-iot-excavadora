@@ -33,17 +33,24 @@
     <!-- Navbar Unificada -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0"
         style="background: rgba(10,12,16,0.95) !important;">
-        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma IoT</span>
+        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma
+            IoT</span>
 
         <ul class="navbar-nav me-auto flex-row gap-3">
             <li class="nav-item" id="nav-item-mis-vehiculos" style="display: none;">
-                <a class="nav-link text-warning active" href="mis-vehiculos.html"><i class="fas fa-truck-moving me-1"></i> Mis Vehículos</a>
+                <a class="nav-link text-warning active" href="mis-vehiculos.html"><i
+                        class="fas fa-truck-moving me-1"></i> Mis Vehículos</a>
             </li>
             <li class="nav-item" id="nav-item-control">
                 <a class="nav-link text-secondary" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
             </li>
             <li class="nav-item" id="nav-item-monitoreo">
-                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i> Monitoreo</a>
+                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
+                    Monitoreo</a>
+            </li>
+            <li class="nav-item" id="nav-item-mis-demos" style="display: none;">
+                <a class="nav-link text-secondary" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis
+                    Demos</a>
             </li>
             <li class="nav-item" id="nav-item-admin" style="display: none;">
                 <a class="nav-link text-secondary" href="admin.html"><i class="fas fa-cogs me-1"></i> Administración</a>
@@ -52,14 +59,21 @@
 
         <div class="d-flex gap-3 align-items-center">
             <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle btn-sm text-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                <button
+                    class="btn btn-outline-secondary dropdown-toggle btn-sm text-light d-flex align-items-center gap-2"
+                    type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-user-circle text-info fa-lg"></i>
                     <span id="user-display-name" class="small fw-bold">Cliente</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
-                    <li><h6 id="user-display-rol" class="dropdown-header text-uppercase text-info small">Rol: --</h6></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><button class="dropdown-item text-danger small" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</button></li>
+                    <li>
+                        <h6 id="user-display-rol" class="dropdown-header text-uppercase text-info small">Rol: --</h6>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><button class="dropdown-item text-danger small" onclick="cerrarSesion()"><i
+                                class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</button></li>
                 </ul>
             </div>
         </div>
@@ -70,8 +84,10 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="p-4 rounded bg-dark border border-secondary shadow-lg">
-                    <h3 class="fw-bold text-light mb-1"><i class="fas fa-truck text-info me-2"></i>Mi Flota Asignada</h3>
-                    <p class="text-secondary small mb-0">Unidades físicas y vehículos IoT registrados a su nombre y listos para operación.</p>
+                    <h3 class="fw-bold text-light mb-1"><i class="fas fa-truck text-info me-2"></i>Mi Flota Asignada
+                    </h3>
+                    <p class="text-secondary small mb-0">Unidades físicas y vehículos IoT registrados a su nombre y
+                        listos para operación.</p>
                 </div>
             </div>
         </div>
@@ -88,7 +104,8 @@
     <!-- Pie de Página Fijo -->
     <footer class="text-center p-2 text-secondary flex-shrink-0"
         style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
-        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong> | Desarrollado por Damaris Domínguez Zapata · 2026</small>
+        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong> | Desarrollado por Damaris
+            Domínguez Zapata · 2026</small>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -114,7 +131,7 @@
                     headers: getAuthHeaders()
                 });
                 if (!res.ok) throw new Error('No se pudo obtener su flota asignada');
-                
+
                 const unidades = await res.json();
 
                 if (unidades.length === 0) {

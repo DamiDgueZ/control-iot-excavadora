@@ -41,20 +41,26 @@
         <ul class="navbar-nav me-auto flex-row gap-3">
             <!-- Enlace visible solo para Clientes / Usuarios -->
             <li class="nav-item" id="nav-item-mis-vehiculos" style="display: none;">
-                <a class="nav-link text-secondary" href="mis-vehiculos.html"><i class="fas fa-truck-moving me-1"></i> Mis Vehículos</a>
+                <a class="nav-link text-secondary" href="mis-vehiculos.html"><i class="fas fa-truck-moving me-1"></i>
+                    Mis Vehículos</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-warning active" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
+                <a class="nav-link text-warning active" href="index.html"><i class="fas fa-sliders-h me-1"></i>
+                    Control</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
                     Monitoreo</a>
             </li>
+            <li class="nav-item" id="nav-item-mis-demos" style="display: none;">
+                <a class="nav-link text-secondary" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis
+                    Demos</a>
+            </li>
             <li class="nav-item" id="nav-item-admin" style="display: none;">
                 <a class="nav-link text-secondary" href="admin.html"><i class="fas fa-cogs me-1"></i> Administración</a>
             </li>
         </ul>
-        
+
         <div class="d-flex gap-3 mt-2 mt-lg-0 align-items-center">
             <span id="badge-demo" class="badge bg-warning text-dark p-2 fs-6 shadow-sm d-none">
                 <i class="fas fa-cogs fa-spin me-1"></i>DEMO EN CURSO
@@ -68,14 +74,21 @@
 
             <!-- Perfil de Usuario y Logout -->
             <div class="dropdown ms-2">
-                <button class="btn btn-outline-secondary dropdown-toggle btn-sm text-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                <button
+                    class="btn btn-outline-secondary dropdown-toggle btn-sm text-light d-flex align-items-center gap-2"
+                    type="button" data-bs-toggle="dropdown">
                     <i class="fas fa-user-circle text-warning fa-lg"></i>
                     <span id="user-display-name" class="small fw-bold">Usuario</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
-                    <li><h6 id="user-display-rol" class="dropdown-header text-uppercase text-info small">Rol: --</h6></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><button class="dropdown-item text-danger small" onclick="cerrarSesion()"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</button></li>
+                    <li>
+                        <h6 id="user-display-rol" class="dropdown-header text-uppercase text-info small">Rol: --</h6>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><button class="dropdown-item text-danger small" onclick="cerrarSesion()"><i
+                                class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</button></li>
                 </ul>
             </div>
         </div>

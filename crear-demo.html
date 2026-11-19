@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración IoT | Excavadora</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        .admin-glass-card {
+            background: rgba(20, 24, 33, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .table-dark-custom th,
+        .table-dark-custom td {
+            background-color: transparent !important;
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="p-0 d-flex flex-column min-vh-100">
+    <!-- Navbar / Navegación unificada -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-lg border-bottom border-secondary flex-shrink-0"
+        style="background: rgba(10,12,16,0.95) !important;">
+        <span class="navbar-brand mb-0 h1 fw-bold me-4"><i class="fas fa-gamepad text-warning me-2"></i>Plataforma
+            IoT</span>
+
+        <ul class="navbar-nav me-auto flex-row gap-3">
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
+                    Monitoreo</a>
+            </li>
+            <li class="nav-item" id="nav-item-mis-demos" style="display: none;">
+                <a class="nav-link text-secondary" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis
+                    Demos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active fw-bold text-light" href="admin.html"><i class="fas fa-cogs me-1"></i>
+                    Administración</a>
+            </li>
+        </ul>
+
+        <div class="d-flex gap-3 mt-2 mt-lg-0">
+            <span id="badge-api-admin" class="badge bg-success p-2 fs-6 shadow-sm"><i
+                    class="fas fa-server me-1"></i>API: Conectada</span>
+        </div>
+    </nav>
+
+    <!-- Contenedor Principal de Administración -->
+    <div class="container px-3 flex-grow-1 my-4">
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="admin-glass-card p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <div>
+                            <h3 class="text-warning fw-bold m-0"><i class="fas fa-tools me-2"></i>Panel de Gestión de
+                                Rutinas DEMO</h3>
+                            <p class="text-secondary small m-0">Administra, crea y configura las rutinas pregrabadas de
+                                la excavadora IoT (Vehículo ID: 1).</p>
+                        </div>
+                        <button class="btn btn-warning fw-bold text-dark px-4 shadow" data-bs-toggle="modal"
+                            data-bs-target="#modalNuevaDemo">
+                            <i class="fas fa-plus-circle me-2"></i>Nueva Rutina DEMO
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Listado de Demos -->
+        <div class="row">
+            <div class="col-12">
+                <div class="admin-glass-card p-3 p-md-4">
+                    <h5 class="mb-3 text-info fw-bold"><i class="fas fa-list me-2"></i>Rutinas DEMO Registradas</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark-custom table-hover align-middle mb-0">
+                            <thead class="text-warning text-uppercase fs-7">
+                                <tr>
+                                    <th scope="col" width="10%">ID</th>
+                                    <th scope="col" width="40%">Nombre / Descripción de la Demo</th>
+                                    <th scope="col" width="25%">Fecha de Creación</th>
+                                    <th scope="col" width="25%" class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-demos-admin">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div> Cargando
+                                        rutinas DEMO desde el servidor...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal para Crear Nueva Demo -->
+    <div class="modal fade" id="modalNuevaDemo" tabindex="-1" aria-labelledby="modalNuevaDemoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary shadow-lg rounded-4">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-warning fw-bold" id="modalNuevaDemoLabel"><i
+                            class="fas fa-plus-circle me-2"></i>Crear Nueva Rutina DEMO</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-nueva-demo">
+                        <div class="mb-3">
+                            <label for="nombre-demo" class="form-label text-secondary small">Nombre o Descripción de la
+                                Rutina</label>
+                            <input type="text" class="form-control bg-black text-light border-secondary"
+                                id="nombre-demo" placeholder="Ej. Rutina de excavación y carga" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning fw-bold text-dark px-4" onclick="crearDemo()">Guardar
+                        Demo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Administrar los Movimientos de una Demo -->
+    <div class="modal fade" id="modalMovimientosDemo" tabindex="-1" aria-labelledby="modalMovimientosLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary shadow-lg rounded-4">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-warning fw-bold" id="modalMovimientosLabel">
+                        <i class="fas fa-list-ol me-2"></i>Configurar Movimientos de la Demo: <span
+                            id="demo-titulo-modal" class="text-info"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Formulario para agregar un nuevo movimiento a la demo -->
+                    <div class="card bg-black border-secondary p-3 mb-4 rounded-3">
+                        <h6 class="text-success fw-bold mb-3"><i class="fas fa-plus-circle me-2"></i>Agregar Nuevo Paso
+                            a la Demo</h6>
+                        <form id="form-nuevo-movimiento" class="row g-3">
+                            <input type="hidden" id="modal-id-demo-activo">
+                            <div class="col-md-5">
+                                <label class="form-label text-secondary small">Comando</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="select-comando"
+                                    required>
+                                    <option value="" selected disabled>Selecciona un comando...</option>
+                                    <option value="2">ADELANTE (Código 2)</option>
+                                    <option value="1">ATRÁS (Código 1)</option>
+                                    <option value="3">GIRO IZQUIERDA (Código 3)</option>
+                                    <option value="4">GIRO DERECHA (Código 4)</option>
+                                    <option value="9">GARRA ARRIBA (Código 9)</option>
+                                    <option value="10">GARRA ABAJO (Código 10)</option>
+                                    <option value="11">DERECHA AUX (Código 11)</option>
+                                    <option value="12">IZQUIERDA AUX (Código 12)</option>
+                                    <option value="13">APAGAR / PARO (Código 13)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-secondary small">Orden del Paso</label>
+                                <input type="number" class="form-control bg-dark text-light border-secondary"
+                                    id="input-orden" placeholder="Ej. 1" min="1" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-secondary small">Duración (ms)</label>
+                                <input type="number" class="form-control bg-dark text-light border-secondary"
+                                    id="input-duracion" placeholder="Ej. 2000" step="100" required>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="button" class="btn btn-success btn-sm fw-bold px-4"
+                                    onclick="agregarMovimientoDemo()">
+                                    <i class="fas fa-save me-1"></i> Añadir Paso
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Tabla con los movimientos actuales de la demo -->
+                    <h6 class="text-info fw-bold mb-2"><i class="fas fa-tasks me-2"></i>Pasos Configurados en esta
+                        Rutina</h6>
+                    <div class="table-responsive">
+                        <table class="table table-dark-custom table-hover align-middle mb-0">
+                            <thead class="text-warning text-uppercase fs-7">
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Comando ID</th>
+                                    <th>Duración (ms)</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-movimientos-demo">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">Selecciona una demo para ver sus
+                                        movimientos.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie de Página Fijo -->
+    <footer class="text-center p-2 text-secondary flex-shrink-0"
+        style="background: rgba(0, 0, 0, 0.95); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+        <small><strong>Ingeniería en Sistemas Computacionales | TecNM Campus Pachuca</strong> | Desarrollado por Damaris
+            Domínguez Zapata · 2026</small>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- LÓGICA DE ADMINISTRACIÓN -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/admin.js"></script>
+</body>
+
+</html>
