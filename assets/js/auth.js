@@ -179,3 +179,52 @@ function cerrarSesion() {
     localStorage.removeItem('iot_sesion_invitado');
     window.location.href = 'login.html';
 }
+
+async function obtenerVehiculoAutorizado(idSolicitado = null, idFallback = 1) {
+    const { usuario } = obtenerSesionActual();
+    if (!usuario) {
+        window.location.replace('login.html');
+        return null;
+    }
+
+    const rol = (usuario.rol || '').toLowerCase().trim();
+    const idParseado = idSolicitado ? parseInt(idSolicitado, 10) : null;
+
+    if (rol !== 'usuario') {
+        return idParseado || idFallback;
+    }
+
+    try {
+        const res = await fetch(`${BASE_URL}/mis-vehiculos`, {
+            headers: getAuthHeaders()
+        });
+        if (!res.ok) {
+            throw new Error('No se pudieron verificar sus unidades asignadas');
+        }
+
+        const unidades = await res.json();
+        const idsPermitidos = (Array.isArray(unidades) ? unidades : [])
+            .map(u => u.id_vehiculo_iot)
+            .filter(id => id !== null && id !== undefined);
+
+        if (idsPermitidos.length === 0) {
+            alert('Tu unidad no tiene un control/vehículo IoT vinculado o aún no tienes un vehículo asignado.');
+            window.location.replace('mis-vehiculos.html');
+            return null;
+        }
+
+        const idObjetivo = idParseado || idsPermitidos[0];
+        if (!idsPermitidos.includes(idObjetivo)) {
+            alert('No tienes permiso para operar o consultar este vehículo.');
+            window.location.replace('mis-vehiculos.html');
+            return null;
+        }
+
+        return idObjetivo;
+    } catch (err) {
+        console.error('Error validando vehículo asignado:', err);
+        alert('No se pudo validar tu vehículo asignado.');
+        window.location.replace('mis-vehiculos.html');
+        return null;
+    }
+}
