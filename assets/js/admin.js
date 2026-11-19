@@ -6,7 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nameEl) nameEl.textContent = usuario.nombre;
     }
 
-    // Cargar datos automáticamente al abrir la página
+    // 1. Verificar estado de la API y encender el indicador visual superior
+    verificarSaludApiAdmin();
+
+    // 2. Cargar datos automáticamente al abrir la página
     cargarUnidadesAdmin();
     cargarModelosAdmin();
     cargarAuditoriaAdmin();
@@ -18,6 +21,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formModelo) formModelo.addEventListener('submit', registrarModelo);
     if (formUnidad) formUnidad.addEventListener('submit', registrarUnidadFisica);
 });
+
+// Verificar disponibilidad de la API y actualizar la insignia superior
+async function verificarSaludApiAdmin() {
+    const badge = document.getElementById('badge-api');
+    if (!badge) return;
+
+    try {
+        const res = await fetch(`${BASE_URL}/`, {
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        if (res.ok) {
+            badge.className = 'badge bg-success p-2 shadow-sm';
+            badge.innerHTML = '<i class="fas fa-server me-1"></i>API: Disponible';
+        } else {
+            throw new Error();
+        }
+    } catch {
+        badge.className = 'badge bg-danger p-2 shadow-sm';
+        badge.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>API: No disponible';
+    }
+}
 
 // Cargar inventario de unidades físicas
 async function cargarUnidadesAdmin() {
