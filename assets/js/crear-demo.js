@@ -14,7 +14,9 @@ document.addEventListener("DOMContentLoaded", function () {
             if (navAdmin) navAdmin.style.display = 'block';
         } else if (usuario.rol === 'usuario') {
             const navVehiculos = document.getElementById('nav-item-mis-vehiculos');
+            const navDemos = document.getElementById('nav-item-mis-demos');
             if (navVehiculos) navVehiculos.style.display = 'block';
+            if (navDemos) navDemos.style.display = 'block';
         }
     }
 
@@ -161,7 +163,7 @@ async function cargarMovimientosDemo(idDemo) {
         }
 
         movimientos.forEach((mov) => {
-            const idMov = mov.id_movimiento || mov.id;
+            const idMov = mov.id_demo_movimiento || mov.id_movimiento || mov.id;
             let tr = document.createElement("tr");
             tr.innerHTML = `
                 <td class="fw-bold text-info">${mov.orden}</td>
@@ -219,6 +221,10 @@ async function agregarMovimientoDemo() {
 }
 
 async function eliminarMovimientoDemo(idMovimiento, idDemo) {
+    if (!idMovimiento) {
+        alert("No se encontró el identificador del movimiento.");
+        return;
+    }
     if (!confirm("¿Estás segura de eliminar este paso de la rutina?")) return;
 
     try {
