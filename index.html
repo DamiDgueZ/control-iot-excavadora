@@ -201,9 +201,14 @@
             document.getElementById('user-display-rol').textContent = `Rol: ${usuario.rol}`;
 
             if (usuario.rol === 'administrador') {
-                document.getElementById('nav-item-admin').style.display = 'block';
+                const navAdmin = document.getElementById('nav-item-admin');
+                if (navAdmin) navAdmin.style.display = 'block';
             } else if (usuario.rol === 'usuario') {
-                document.getElementById('nav-item-mis-vehiculos').style.display = 'block';
+                const navVehiculos = document.getElementById('nav-item-mis-vehiculos');
+                const navDemos = document.getElementById('nav-item-mis-demos');
+
+                if (navVehiculos) navVehiculos.style.display = 'block';
+                if (navDemos) navDemos.style.display = 'block'; // <-- Esto hace aparecer "Mis Demos"
             }
         });
     </script>
