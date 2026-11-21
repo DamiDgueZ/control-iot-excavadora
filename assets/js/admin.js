@@ -95,21 +95,50 @@ async function registrarNuevoControl(e) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Error al crear el control IoT');
 
-        const nuevoId = data.id_vehiculo || data.id || data.vehiculo?.id_vehiculo || data.vehiculo?.id;
+        const rawId = data.id_vehiculo ?? data.id;
+        const nuevoId = typeof rawId === 'object' && rawId !== null
+            ? (rawId.id_vehiculo ?? rawId.id ?? Object.values(rawId)[0])
+            : rawId;
+
+        let comandosCreados = 0;
+        let primerErrorCmd = '';
 
         if (nuevoId && cargarBase) {
             for (const cmd of COMANDOS_BASE_NUEVO_CONTROL) {
                 try {
-                    await fetch(`${BASE_URL}/vehiculos/${nuevoId}/comandos`, {
+                    const resCmd = await fetch(`${BASE_URL}/vehiculos/${nuevoId}/comandos`, {
                         method: 'POST',
                         headers: getAuthHeaders(),
                         body: JSON.stringify(cmd)
                     });
-                } catch (_) {}
+                    const dataCmd = await resCmd.json();
+                    if (resCmd.ok) {
+                        comandosCreados++;
+                    } else if (!primerErrorCmd) {
+                        primerErrorCmd = dataCmd.detail || `HTTP ${resCmd.status}`;
+                    }
+                } catch (errCmd) {
+                    if (!primerErrorCmd) {
+                        primerErrorCmd = errCmd.message || 'Error de red';
+                    }
+                }
             }
         }
 
-        alert(`¡Control IoT "${nombre}" creado${nuevoId ? ` con ID #${nuevoId}` : ''}! Ya puedes vincularlo en Editar Unidad.`);
+        let detalleComandos = '';
+        if (cargarBase) {
+            if (!nuevoId) {
+                detalleComandos = ' | Aviso: el servidor no devolvió el ID del nuevo vehículo para cargar comandos.';
+            } else {
+                detalleComandos = ` | Comandos base agregados: ${comandosCreados}/${COMANDOS_BASE_NUEVO_CONTROL.length}`;
+                if (primerErrorCmd) {
+                    detalleComandos += ` (Detalle: ${primerErrorCmd})`;
+                }
+            }
+        }
+
+        alert(`¡Control IoT "${nombre}" creado${nuevoId ? ` con ID #${nuevoId}` : ''}!${detalleComandos}`);
+
         const modalEl = document.getElementById('modalCrearControl');
         if (modalEl) {
             const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
