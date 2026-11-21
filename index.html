@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control IoT | Excavadora</title>
+    <title>Control IoT | Vehículo</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -43,15 +43,15 @@
                     Mis Vehículos</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-warning active" href="index.html"><i class="fas fa-sliders-h me-1"></i>
+                <a class="nav-link text-warning active" id="nav-link-control" href="index.html"><i class="fas fa-sliders-h me-1"></i>
                     Control</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
+                <a class="nav-link text-secondary" id="nav-link-monitoreo" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
                     Monitoreo</a>
             </li>
             <li class="nav-item" id="nav-item-mis-demos" style="display: none;">
-                <a class="nav-link text-secondary" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis
+                <a class="nav-link text-secondary" id="nav-link-mis-demos" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis
                     Demos</a>
             </li>
             <li class="nav-item" id="nav-item-admin" style="display: none;">
@@ -59,7 +59,7 @@
             </li>
         </ul>
 
-        <div class="d-flex gap-3 mt-2 mt-lg-0 align-items-center">
+        <div class="d-flex gap-3 mt-2 mt-lg-0 align-items-center flex-wrap">
             <span id="badge-demo" class="badge bg-warning text-dark p-2 fs-6 shadow-sm d-none">
                 <i class="fas fa-cogs fa-spin me-1"></i>DEMO EN CURSO
             </span>
@@ -100,6 +100,25 @@
             <!-- Mando Estilo Gamepad -->
             <div class="col-lg-9 col-xl-8">
                 <div class="gamepad-container p-3 p-md-4 shadow-lg">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <span id="ctrl-vehiculo-badge" class="badge bg-dark border border-info text-info px-3 py-2">
+                            <i class="fas fa-microchip me-1"></i>Vehículo ID: --
+                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm bg-dark text-light border-secondary" id="select-demo" style="max-width: 220px;">
+                                <option value="">Cargando demos...</option>
+                            </select>
+                            <input type="number"
+                                class="form-control form-control-sm bg-dark text-light border-secondary text-center fw-bold"
+                                id="input-demo" min="1" placeholder="ID"
+                                style="max-width: 65px;">
+                            <button class="btn btn-sm btn-outline-warning btn-gamepad text-light px-3"
+                                onclick="ejecutarDemoSeleccionada()" title="Iniciar Demo">
+                                <i class="fas fa-play me-1"></i>Demo
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="row align-items-center">
                         <!-- Joystick Tracción -->
                         <div class="col-md-5 text-center joystick-panel">
@@ -126,17 +145,6 @@
                                 onclick="toggleClaxon()" title="Claxon">
                                 <i class="fas fa-volume-up"></i>
                             </button>
-
-                            <div class="input-group mb-2 w-100 shadow-sm justify-content-center">
-                                <input type="number"
-                                    class="form-control bg-dark text-light border-secondary text-center fw-bold"
-                                    id="input-demo" min="1" value="1" placeholder="N°"
-                                    style="font-size: 1rem; max-width: 60px; padding: 5px;">
-                                <button class="btn btn-outline-secondary btn-gamepad text-light px-3"
-                                    onclick="ejecutarDemoSeleccionada()" title="Iniciar Demo">
-                                    <i class="fas fa-play"></i>
-                                </button>
-                            </div>
                         </div>
 
                         <!-- Joystick Brazo/Rotación -->
@@ -214,8 +222,18 @@
             if (!idAutorizado) return;
 
             window.VEHICULO_ID_AUTORIZADO = idAutorizado;
+
+            const linkControl = document.getElementById('nav-link-control');
+            const linkMonitoreo = document.getElementById('nav-link-monitoreo');
+            const linkDemos = document.getElementById('nav-link-mis-demos');
+            if (linkControl) linkControl.href = `index.html?id=${idAutorizado}`;
+            if (linkMonitoreo) linkMonitoreo.href = `monitoreo.html?id=${idAutorizado}`;
+            if (linkDemos) linkDemos.href = `crear-demo.html?id=${idAutorizado}`;
+
             const contenedor = document.getElementById('contenido-protegido');
             if (contenedor) contenedor.classList.remove('d-none');
+
+            window.dispatchEvent(new CustomEvent('vehiculoAutorizadoListo', { detail: { idVehiculo: idAutorizado } }));
         });
     </script>
     <script src="assets/js/app.js"></script>

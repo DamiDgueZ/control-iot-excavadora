@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo IoT | Excavadora</title>
+    <title>Monitoreo IoT | Vehículo</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -70,14 +70,14 @@
                     Mis Vehículos</a>
             </li>
             <li class="nav-item" id="nav-item-control">
-                <a class="nav-link text-secondary" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
+                <a class="nav-link text-secondary" id="nav-link-control" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
             </li>
             <li class="nav-item" id="nav-item-monitoreo">
-                <a class="nav-link text-warning active" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
+                <a class="nav-link text-warning active" id="nav-link-monitoreo" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i>
                     Monitoreo</a>
             </li>
             <li class="nav-item" id="nav-item-mis-demos" style="display: none;">
-                <a class="nav-link text-secondary" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis
+                <a class="nav-link text-secondary" id="nav-link-mis-demos" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis
                     Demos</a>
             </li>
             <li class="nav-item" id="nav-item-admin" style="display: none;">
@@ -85,7 +85,7 @@
             </li>
         </ul>
 
-        <div class="d-flex gap-3 mt-2 mt-lg-0 align-items-center">
+        <div class="d-flex gap-3 mt-2 mt-lg-0 align-items-center flex-wrap">
             <span id="badge-wss" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-plug me-1"></i>WSS:
                 --</span>
             <span id="badge-api" class="badge bg-danger p-2 fs-6 shadow-sm"><i class="fas fa-server me-1"></i>API:
@@ -128,7 +128,7 @@
                         <div>
                             <h1 id="mov-nombre" class="fs-3 fs-md-2 fw-bold text-warning m-0 font-monospace">ESPERANDO
                                 DATOS...</h1>
-                            <span id="mov-vehiculo" class="text-secondary small">Vehículo ID: 1 · Excavadora IoT</span>
+                            <span id="mov-vehiculo" class="text-secondary small">Vehículo ID: --</span>
                         </div>
                         <div class="text-md-end mt-2 mt-md-0">
                             <div class="fs-6 text-light"><i class="far fa-calendar-alt text-info me-2"></i><span
@@ -207,8 +207,18 @@
             if (!idAutorizado) return;
 
             window.VEHICULO_ID_AUTORIZADO = idAutorizado;
+
+            const linkControl = document.getElementById('nav-link-control');
+            const linkMonitoreo = document.getElementById('nav-link-monitoreo');
+            const linkDemos = document.getElementById('nav-link-mis-demos');
+            if (linkControl) linkControl.href = `index.html?id=${idAutorizado}`;
+            if (linkMonitoreo) linkMonitoreo.href = `monitoreo.html?id=${idAutorizado}`;
+            if (linkDemos) linkDemos.href = `crear-demo.html?id=${idAutorizado}`;
+
             const contenedor = document.getElementById('contenido-protegido');
             if (contenedor) contenedor.classList.remove('d-none');
+
+            window.dispatchEvent(new CustomEvent('vehiculoAutorizadoListo', { detail: { idVehiculo: idAutorizado } }));
         });
     </script>
     <script src="assets/js/monitoreo.js"></script>

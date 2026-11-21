@@ -25,12 +25,51 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (!VEHICULO_ID) return;
 
     window.VEHICULO_ID_AUTORIZADO = VEHICULO_ID;
+
+    const linkControl = document.getElementById('nav-link-control');
+    const linkMonitoreo = document.getElementById('nav-link-monitoreo');
+    const linkDemos = document.getElementById('nav-link-mis-demos');
+    if (linkControl) linkControl.href = `index.html?id=${VEHICULO_ID}`;
+    if (linkMonitoreo) linkMonitoreo.href = `monitoreo.html?id=${VEHICULO_ID}`;
+    if (linkDemos) linkDemos.href = `crear-demo.html?id=${VEHICULO_ID}`;
+
+    const subtitulo = document.getElementById('demos-subtitulo-vehiculo');
+    if (subtitulo) {
+        subtitulo.textContent = `Administra, crea y configura las rutinas pregrabadas del vehículo IoT #${VEHICULO_ID} en uso.`;
+    }
+
     const contenedor = document.getElementById('contenido-protegido');
     if (contenedor) contenedor.classList.remove('d-none');
 
-    console.log("Módulo de Demos de Cliente inicializado correctamente.");
-    cargarDemos();
+    console.log(`Módulo de Demos inicializado para Vehículo ID: ${VEHICULO_ID}.`);
+    await cargarComandosParaDemo();
+    await cargarDemos();
 });
+
+// Cargar comandos disponibles del vehículo en uso para el modal de movimientos
+async function cargarComandosParaDemo() {
+    const selectCmd = document.getElementById('select-comando');
+    if (!selectCmd || !VEHICULO_ID) return;
+
+    try {
+        const res = await fetch(`${BASE_URL}/vehiculos/${VEHICULO_ID}/comandos`, {
+            method: 'GET',
+            headers: getAuthHeaders()
+        });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const comandos = Array.isArray(data) ? data : (data.comandos || []);
+        const activos = comandos.filter(c => c.activo !== false && c.activo !== 0);
+
+        if (activos.length > 0) {
+            selectCmd.innerHTML = '<option value="" selected disabled>Selecciona un comando...</option>' +
+                activos.map(c => `<option value="${c.id_comando}">${c.nombre} (Código ${c.codigo})</option>`).join('');
+        }
+    } catch (error) {
+        console.warn("No se pudieron cargar comandos dinámicos para demos:", error);
+    }
+}
 
 // 1. Obtener y listar las demos del vehículo autorizado
 async function cargarDemos() {
@@ -58,6 +97,7 @@ async function cargarDemos() {
         demos.forEach((demo) => {
             const idDemo = demo.id_demo || demo.id;
             const nombreDemo = demo.nombre || demo.descripcion || "Rutina sin nombre";
+            const nombreSeguro = String(nombreDemo).replace(/'/g, "\\'");
             
             let tr = document.createElement("tr");
             tr.innerHTML = `
@@ -66,7 +106,7 @@ async function cargarDemos() {
                 <td class="text-muted small">${demo.fecha_creacion || demo.fecha || "Reciente"}</td>
                 <td class="text-center">
                     <div class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-sm btn-outline-info px-3 shadow-sm" onclick="abrirModalMovimientos(${idDemo}, '${nombreDemo}')">
+                        <button class="btn btn-sm btn-outline-info px-3 shadow-sm" onclick="abrirModalMovimientos(${idDemo}, '${nombreSeguro}')">
                             <i class="fas fa-list-ol me-1"></i> Movimientos
                         </button>
                         <button class="btn btn-sm btn-outline-danger px-3 shadow-sm" onclick="eliminarDemo(${idDemo})">
@@ -144,6 +184,8 @@ async function abrirModalMovimientos(idDemo, nombreDemo) {
     document.getElementById("modal-id-demo-activo").value = idDemo;
     document.getElementById("demo-titulo-modal").textContent = `${nombreDemo} (ID: ${idDemo})`;
     
+    await cargarComandosParaDemo();
+
     const modalEl = document.getElementById("modalMovimientosDemo");
     const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.show();
@@ -199,9 +241,9 @@ async function cargarMovimientosDemo(idDemo) {
 
 async function agregarMovimientoDemo() {
     const idDemo = document.getElementById("modal-id-demo-activo").value;
-    const idComando = parseInt(document.getElementById("select-comando").value);
-    const orden = parseInt(document.getElementById("input-orden").value);
-    const duracionMs = parseInt(document.getElementById("input-duracion").value);
+    const idComando = parseInt(document.getElementById("select-comando").value, 10);
+    const orden = parseInt(document.getElementById("input-orden").value, 10);
+    const duracionMs = parseInt(document.getElementById("input-duracion").value, 10);
 
     if (!idComando || isNaN(orden) || isNaN(duracionMs)) {
         alert("Por favor completa todos los campos del movimiento.");

@@ -54,13 +54,13 @@
                 <a class="nav-link text-secondary" href="mis-vehiculos.html"><i class="fas fa-truck-moving me-1"></i> Mis Vehículos</a>
             </li>
             <li class="nav-item" id="nav-item-control">
-                <a class="nav-link text-secondary" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
+                <a class="nav-link text-secondary" id="nav-link-control" href="index.html"><i class="fas fa-sliders-h me-1"></i> Control</a>
             </li>
             <li class="nav-item" id="nav-item-monitoreo">
-                <a class="nav-link text-secondary" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i> Monitoreo</a>
+                <a class="nav-link text-secondary" id="nav-link-monitoreo" href="monitoreo.html"><i class="fas fa-chart-line me-1"></i> Monitoreo</a>
             </li>
             <li class="nav-item" id="nav-item-mis-demos">
-                <a class="nav-link active fw-bold text-light" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis Demos</a>
+                <a class="nav-link active fw-bold text-light" id="nav-link-mis-demos" href="crear-demo.html"><i class="fas fa-list-check me-1"></i> Mis Demos</a>
             </li>
             <li class="nav-item" id="nav-item-admin" style="display: none;">
                 <a class="nav-link text-secondary" href="admin.html"><i class="fas fa-cogs me-1"></i> Administración</a>
@@ -94,7 +94,7 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div>
                             <h3 class="text-warning fw-bold m-0"><i class="fas fa-tools me-2"></i>Panel de Gestión de Rutinas DEMO</h3>
-                            <p class="text-secondary small m-0">Administra, crea y configura las rutinas pregrabadas de la excavadora IoT asignada a tu cuenta.</p>
+                            <p id="demos-subtitulo-vehiculo" class="text-secondary small m-0">Administra, crea y configura las rutinas pregrabadas del vehículo IoT en uso.</p>
                         </div>
                         <button class="btn btn-warning fw-bold text-dark px-4 shadow" data-bs-toggle="modal" data-bs-target="#modalNuevaDemo">
                             <i class="fas fa-plus-circle me-2"></i>Nueva Rutina DEMO
