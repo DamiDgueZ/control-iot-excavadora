@@ -5,6 +5,21 @@ let vehiculosCache = [];
 let unidadEditandoActual = null;
 let comandosVehiculoEditando = [];
 
+const COMANDOS_BASE_NUEVO_CONTROL = [
+    { nombre: 'ATRAS', codigo: 1, descripcion: 'Retroceder' },
+    { nombre: 'ADELANTE', codigo: 2, descripcion: 'Avanzar' },
+    { nombre: 'GIRO_IZQUIERDA', codigo: 3, descripcion: 'Giro a la izquierda' },
+    { nombre: 'GIRO_DERECHA', codigo: 4, descripcion: 'Giro a la derecha' },
+    { nombre: 'ENCENDIDO', codigo: 5, descripcion: 'Encender o apagar sistema' },
+    { nombre: 'LUZ', codigo: 7, descripcion: 'Alternar luces' },
+    { nombre: 'SONIDO', codigo: 8, descripcion: 'Activar claxon o sonido' },
+    { nombre: 'GARRA_ARRIBA', codigo: 9, descripcion: 'Subir brazo o garra' },
+    { nombre: 'GARRA_ABAJO', codigo: 10, descripcion: 'Bajar brazo o garra' },
+    { nombre: 'DERECHA', codigo: 11, descripcion: 'Rotar o mover derecha auxiliar' },
+    { nombre: 'IZQUIERDA', codigo: 12, descripcion: 'Rotar o mover izquierda auxiliar' },
+    { nombre: 'APAGAR_TODO', codigo: 13, descripcion: 'Paro de emergencia / detener todo' }
+];
+
 document.addEventListener('DOMContentLoaded', () => {
     const { usuario } = obtenerSesionActual();
     if (usuario) {
@@ -19,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarModelosAdmin();
     cargarAuditoriaAdmin();
 
+    document.getElementById('form-crear-control')?.addEventListener('submit', registrarNuevoControl);
     document.getElementById('form-crear-modelo')?.addEventListener('submit', registrarModelo);
     document.getElementById('form-crear-unidad')?.addEventListener('submit', registrarUnidadFisica);
     document.getElementById('form-asignar-unidad')?.addEventListener('submit', guardarAsignacionUnidad);
@@ -54,9 +70,62 @@ async function cargarVehiculosAdmin() {
             headers: getAuthHeaders()
         });
         if (!res.ok) throw new Error('Error cargando vehículos IoT');
-        vehiculosCache = await res.json();
+        const data = await res.json();
+        vehiculosCache = Array.isArray(data) ? data : (data.vehiculos || []);
     } catch {
         vehiculosCache = [];
+    }
+}
+
+// Crear un nuevo control / vehículo IoT sin tocar los existentes
+async function registrarNuevoControl(e) {
+    e.preventDefault();
+    const nombre = document.getElementById('control-nombre').value.trim();
+    const modelo = document.getElementById('control-modelo').value.trim();
+    const microcontrolador = document.getElementById('control-mcu').value.trim() || 'ESP8266';
+    const descripcion = document.getElementById('control-desc').value.trim() || `Control IoT ${nombre}`;
+    const cargarBase = document.getElementById('control-cargar-comandos')?.checked ?? true;
+
+    try {
+        const res = await fetch(`${BASE_URL}/vehiculos`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ nombre, modelo, microcontrolador, descripcion })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Error al crear el control IoT');
+
+        const nuevoId = data.id_vehiculo || data.id || data.vehiculo?.id_vehiculo || data.vehiculo?.id;
+
+        if (nuevoId && cargarBase) {
+            for (const cmd of COMANDOS_BASE_NUEVO_CONTROL) {
+                try {
+                    await fetch(`${BASE_URL}/vehiculos/${nuevoId}/comandos`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(cmd)
+                    });
+                } catch (_) {}
+            }
+        }
+
+        alert(`¡Control IoT "${nombre}" creado${nuevoId ? ` con ID #${nuevoId}` : ''}! Ya puedes vincularlo en Editar Unidad.`);
+        const modalEl = document.getElementById('modalCrearControl');
+        if (modalEl) {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modalInstance.hide();
+        }
+        document.getElementById('form-crear-control').reset();
+        document.getElementById('control-mcu').value = 'ESP8266';
+        if (document.getElementById('control-cargar-comandos')) {
+            document.getElementById('control-cargar-comandos').checked = true;
+        }
+
+        await cargarVehiculosAdmin();
+        await cargarUnidadesAdmin();
+        await cargarAuditoriaAdmin();
+    } catch (err) {
+        alert('Error: ' + err.message);
     }
 }
 
