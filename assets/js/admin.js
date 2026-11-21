@@ -163,6 +163,7 @@ async function cargarUsuariosAdmin() {
     const tbody = document.getElementById('tabla-usuarios-body');
     const selectAsignar = document.getElementById('asignar-cliente-select');
     const selectEditarProp = document.getElementById('editar-propietario-select');
+    const { usuario: sesionActual } = obtenerSesionActual();
 
     try {
         const res = await fetch(`${BASE_URL}/usuarios`, {
@@ -185,6 +186,8 @@ async function cargarUsuariosAdmin() {
                 tbody.innerHTML = usuariosCache.map(u => {
                     const activo = u.activo === 1 || u.activo === true;
                     const colorRol = u.rol === 'administrador' ? 'warning text-dark' : (u.rol === 'usuario' ? 'info text-dark' : 'secondary');
+                    const esMismoAdmin = sesionActual && sesionActual.id_usuario === u.id_usuario;
+                    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
                     return `
                         <tr>
                             <td>${u.id_usuario}</td>
@@ -198,9 +201,16 @@ async function cargarUsuariosAdmin() {
                             </td>
                             <td class="text-muted small">${u.fecha_registro ? new Date(u.fecha_registro).toLocaleDateString() : '--'}</td>
                             <td>
-                                <button class="btn btn-outline-warning btn-sm" onclick="abrirModalEditarUsuario(${u.id_usuario})" title="Editar usuario">
-                                    <i class="fas fa-user-edit me-1"></i> Editar
-                                </button>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <button class="btn btn-outline-warning btn-sm" onclick="abrirModalEditarUsuario(${u.id_usuario})" title="Editar usuario">
+                                        <i class="fas fa-user-edit me-1"></i> Editar
+                                    </button>
+                                    ${esMismoAdmin ? '' : `
+                                        <button class="btn btn-outline-danger btn-sm" onclick="eliminarUsuarioAdmin(${u.id_usuario}, '${nombreEscapado}')" title="Eliminar usuario">
+                                            <i class="fas fa-trash-alt me-1"></i> Eliminar
+                                        </button>
+                                    `}
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -729,7 +739,7 @@ async function eliminarPasoDemoAdmin(idDemoMovimiento, idDemo) {
 }
 
 // ============================================================================
-// ADMINISTRACIÓN DE USUARIOS (CREAR Y EDITAR)
+// ADMINISTRACIÓN DE USUARIOS (CREAR, EDITAR Y ELIMINAR)
 // ============================================================================
 async function crearUsuarioDesdeAdmin(e) {
     e.preventDefault();
@@ -796,6 +806,26 @@ async function guardarEdicionUsuarioAdmin(e) {
         const modalInstance = bootstrap.Modal.getInstance(modalEl);
         if (modalInstance) modalInstance.hide();
 
+        await cargarUsuariosAdmin();
+        await cargarUnidadesAdmin();
+        await cargarAuditoriaAdmin();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+async function eliminarUsuarioAdmin(idUsuario, nombreUsuario) {
+    if (!confirm(`¿Eliminar permanentemente al usuario "${nombreUsuario}" (ID #${idUsuario})? Las unidades asignadas quedarán sin propietario.`)) return;
+
+    try {
+        const res = await fetch(`${BASE_URL}/admin/usuarios/${idUsuario}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Error al eliminar usuario');
+
+        alert('¡Usuario eliminado correctamente!');
         await cargarUsuariosAdmin();
         await cargarUnidadesAdmin();
         await cargarAuditoriaAdmin();
